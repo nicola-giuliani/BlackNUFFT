@@ -1,9 +1,9 @@
-#NUFFT
+# NUFFT
 
 This repository contains two different libraries for the computation of the Non Uniform Fast Fourier Transform. The algorithm has been developed by Professor Leslie Greengard and it is available, under GPL license, here http://www.cims.nyu.edu/cmcl/nufft/nufft.html.
 The directory libGreengard contains the original FORTRAN 77 algorithm very optimised on a single core. The directory libNUFFT contains instead its translation in C++ via the usage of the deal.ii library, available under LGPL license here https://www.dealii.org/. Our goal is to parallelise the C++ implementation through a multicore-multiprocessor paradigm using both Intel Threading Building Block and MPI.
 
-##BlackNUFFT Breakdown
+## BlackNUFFT Breakdown
 
 We have divided the [original code](http://www.cims.nyu.edu/cmcl/software.html) by Leslie Greengard into the main steps. This new modularity allows for user-driven customisations since every of these functions can be easily replaced. 
 
