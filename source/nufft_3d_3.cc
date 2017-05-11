@@ -1,7 +1,7 @@
 #include "nufft_3d_3.h"
 #include "fftw3.h"
 #include "fftw3-mpi.h"
-
+#include <deal.II/base/exceptions.h>
 // Function to compute the next integer divisible for 2, 3, and 5.
 int next235(double in)
 {
@@ -50,7 +50,7 @@ NUFFT3D3::NUFFT3D3(const std::vector<std::vector<double> > &in_grid, const std::
 // A simple initialiser that resizes the grid parameters and the number of points.
 // We have put an Assert to check that the requested tolerance is right.
 
-void NUFFT3D3::init_nufft(double eps, bool fft_bool)
+void NUFFT3D3::init_nufft(double eps, bool fft_bool, std::string gridding_input, std::string fft_input)
 {
   TimerOutput::Scope t(computing_timer, " Initialisation ");
   nj = input_grid[0].size();
@@ -62,6 +62,8 @@ void NUFFT3D3::init_nufft(double eps, bool fft_bool)
   Assert((eps >= 1e-33) && (eps <= 1e-1), ExcNotImplemented());
   epsilon = eps;
   fft_backward = fft_bool;
+  gridding = gridding_input;
+  fft_type = fft_input;
 }
 
 
@@ -71,44 +73,49 @@ void NUFFT3D3::create_index_sets()
 {
   TimerOutput::Scope t(computing_timer, " Computing IndexSets ");
 
-
-  // We create this index set following the repartition of fftw3.
-
-  // We create this index set following the repartition of fftw3.
-  fftw3_set.set_size(nf1*nf2*nf3*2);
-  fftw3_set.add_range(nf1*nf2*(local_nf3_start)*2, nf1*nf2*(local_nf3_start+local_nf3)*2);
-
-  // We create this index set following the repartition of fftw3. We need to be sure that all the things that influence
-  // the output are included here. This will be the relevant index set for the distributed array.
-  fftw3_output_set.set_size(2*nf3*nf2*nf1);
-  types::global_dof_index ghost1, ghost2;
-  if(local_nf3_start>nspread)
-    ghost1=nspread;
-  else
-    ghost1=0;//local_nf3_start;
-  if(nf3-local_nf3_start-local_nf3>nspread)
-    ghost2=nspread;
-  else
-    ghost2=0;//nf3-local_nf3_start-local_nf3;
-  fftw3_output_set.add_range(nf1*nf2*(local_nf3_start-ghost1)*2, nf1*nf2*(local_nf3_start)*2);
-  fftw3_output_set.add_range(nf1*nf2*(local_nf3_start+local_nf3)*2, nf1*nf2*(local_nf3_start+local_nf3+ghost2)*2);
-
-  fine_grid_data.reinit(fftw3_set, fftw3_output_set, mpi_communicator);
-
-  // We create the input set associated with the set needed by fftw 3d.
-  input_set.set_size(nj);
-  for(types::global_dof_index j=0; j<nj; ++j)
+  if(fft_type == "FFTW")
   {
-    auto jb1 = types::global_dof_index(double(nf1/2) + (input_grid[0][j]-xb[0])/hx);
-    auto jb2 = types::global_dof_index(double(nf2/2) + (input_grid[1][j]-xb[1])/hy);
-    auto jb3 = types::global_dof_index(double(nf3/2) + (input_grid[2][j]-xb[2])/hz);
-    if(fftw3_set.is_element(2 * (jb1 + jb2*nf1 + jb3*nf1*nf2)))
-    {
-      input_set.add_index(j);
-    }
+    // We create this index set following the repartition of fftw3.
+    // We create this index set following the repartition of fftw3.
+    fftw3_set.set_size(nf1*nf2*nf3*2);
+    fftw3_set.add_range(nf1*nf2*(local_nf3_start)*2, nf1*nf2*(local_nf3_start+local_nf3)*2);
 
+    // We create this index set following the repartition of fftw3. We need to be sure that all the things that influence
+    // the output are included here. This will be the relevant index set for the distributed array.
+    fftw3_output_set.set_size(2*nf3*nf2*nf1);
+    types::global_dof_index ghost1, ghost2;
+    if(local_nf3_start>nspread)
+      ghost1=nspread;
+    else
+      ghost1=0;//local_nf3_start;
+    if(nf3-local_nf3_start-local_nf3>nspread)
+      ghost2=nspread;
+    else
+      ghost2=0;//nf3-local_nf3_start-local_nf3;
+    fftw3_output_set.add_range(nf1*nf2*(local_nf3_start-ghost1)*2, nf1*nf2*(local_nf3_start)*2);
+    fftw3_output_set.add_range(nf1*nf2*(local_nf3_start+local_nf3)*2, nf1*nf2*(local_nf3_start+local_nf3+ghost2)*2);
+
+    fine_grid_data.reinit(fftw3_set, fftw3_output_set, mpi_communicator);
+
+    // We create the input set associated with the set needed by fftw 3d.
+    input_set.set_size(nj);
+    for(types::global_dof_index j=0; j<nj; ++j)
+    {
+      auto jb1 = types::global_dof_index(double(nf1/2) + (input_grid[0][j]-xb[0])/hx);
+      auto jb2 = types::global_dof_index(double(nf2/2) + (input_grid[1][j]-xb[1])/hy);
+      auto jb3 = types::global_dof_index(double(nf3/2) + (input_grid[2][j]-xb[2])/hz);
+      if(fftw3_set.is_element(2 * (jb1 + jb2*nf1 + jb3*nf1*nf2)))
+      {
+        input_set.add_index(j);
+      }
+
+    }
+    input_set.compress();
   }
-  input_set.compress();
+  else
+  {
+    AssertThrow(true, ExcNotImplemented());
+  }
   // We create the additional input sets needed by the accelerating version of the gridding.
   create_index_sets_for_first_gridding();
 
@@ -354,10 +361,40 @@ void NUFFT3D3::compute_ranges()
   }
 }
 
+
+void NUFFT3D3::input_gridding()
+{
+  TimerOutput::Scope t(computing_timer, " Input Gridding ");
+
+  if(gridding == "FGG")
+  {
+    fast_gaussian_gridding_on_input();
+    scaling_input_gridding();
+  }
+  else if(gridding == "MINMAX")
+  {
+    AssertThrow(true, ExcNotImplemented())
+  }
+}
+
+void NUFFT3D3::output_gridding()
+{
+  TimerOutput::Scope t(computing_timer, " Output Gridding ");
+
+  if(gridding == "FGG")
+  {
+    fast_gaussian_gridding_on_output();
+    scaling_output_gridding();
+  }
+  else if(gridding == "MINMAX")
+  {
+    AssertThrow(true, ExcNotImplemented())
+  }
+}
+
 // This function performs the initial Gaussian gridding. We have chosen to maintain
 // Greengard's fast implementation of the Gauss function. This is essential since
 // this function and its counterpart are very computationally expensive.
-
 void NUFFT3D3::fast_gaussian_gridding_on_input()
 {
   TimerOutput::Scope t(computing_timer, " Fast Gaussian Gridding on Inputs ");
@@ -597,12 +634,12 @@ void NUFFT3D3::fast_gaussian_gridding_on_input()
 // Gaussian gridding. This should be just a pointwise multiplication. For this
 // reason we can use TaskGroup withuot caring about racing conditions.
 
-void NUFFT3D3::deconvolution_before_fft()
+void NUFFT3D3::scaling_input_gridding()
 {
   TimerOutput::Scope t(computing_timer, " Deconvolution Before FFT ");
 
 
-  auto f_deconvolution_before_fft = [] (types::global_dof_index k2, types::global_dof_index k1, parallel::distributed::Vector<double> &fine_grid_data_copy, const NUFFT3D3 *foo_nufft)
+  auto f_scaling_input_gridding = [] (types::global_dof_index k2, types::global_dof_index k1, parallel::distributed::Vector<double> &fine_grid_data_copy, const NUFFT3D3 *foo_nufft)
   {
 
     types::global_dof_index ii;
@@ -648,15 +685,15 @@ void NUFFT3D3::deconvolution_before_fft()
     }
   };
 
-  Threads::TaskGroup<> deconvolution_before_fft_group;
+  Threads::TaskGroup<> scaling_input_gridding_group;
   for(types::global_dof_index k2 = 0; k2<2*iw8+1; ++k2)
   {
      for(types::global_dof_index k1 = 0; k1<2*iw7+1; ++k1)
      {
-      deconvolution_before_fft_group += Threads::new_task ( static_cast<void (*)(types::global_dof_index, types::global_dof_index, parallel::distributed::Vector<double> &, const NUFFT3D3 *)> (f_deconvolution_before_fft), k2, k1, fine_grid_data, this);
+      scaling_input_gridding_group += Threads::new_task ( static_cast<void (*)(types::global_dof_index, types::global_dof_index, parallel::distributed::Vector<double> &, const NUFFT3D3 *)> (f_scaling_input_gridding), k2, k1, fine_grid_data, this);
      }
   }
-  deconvolution_before_fft_group.join_all();
+  scaling_input_gridding_group.join_all();
 
   // for(types::global_dof_index i = 0; i<fine_grid_data.size()/2; ++i)
   //   // fine_grid_data[i]=test_data_before[i];
@@ -787,30 +824,37 @@ void NUFFT3D3::shift_data_before_fft()
 void NUFFT3D3::compute_fft_3d()
 {
   TimerOutput::Scope t(computing_timer, " 3D FFTW ");
-  fftw_plan p;
-  fftw_complex *dummy;
-
-  // We need a cast to make FFTW accept the lacal double array as a complex one.
-  // We have taken care of compatibility before so we just need a cast.
-  dummy = reinterpret_cast<fftw_complex *> (&fine_grid_data.local_element(0));
-
-  // We don't need the ghost cells set up by the gridding anymore so we wipe them
-  // out.
-  fine_grid_data.zero_out_ghosts();
-  if(fft_backward)
+  if(fft_type == "FFTW")
   {
-    p = fftw_mpi_plan_dft_3d(nf3, nf2, nf1, dummy, dummy, mpi_communicator, FFTW_BACKWARD, FFTW_ESTIMATE);
-    fftw_execute(p);
-    pcout<<"BACKWARD FFT"<<std::endl;
-    fftw_destroy_plan(p);
+    fftw_plan p;
+    fftw_complex *dummy;
+
+    // We need a cast to make FFTW accept the lacal double array as a complex one.
+    // We have taken care of compatibility before so we just need a cast.
+    dummy = reinterpret_cast<fftw_complex *> (&fine_grid_data.local_element(0));
+
+    // We don't need the ghost cells set up by the gridding anymore so we wipe them
+    // out.
+    fine_grid_data.zero_out_ghosts();
+    if(fft_backward)
+    {
+      p = fftw_mpi_plan_dft_3d(nf3, nf2, nf1, dummy, dummy, mpi_communicator, FFTW_BACKWARD, FFTW_ESTIMATE);
+      fftw_execute(p);
+      pcout<<"BACKWARD FFT"<<std::endl;
+      fftw_destroy_plan(p);
+    }
+    else
+    {
+      p = fftw_mpi_plan_dft_3d(nf3, nf2, nf1,dummy, dummy, mpi_communicator, FFTW_FORWARD, FFTW_ESTIMATE);
+      fftw_execute(p);
+      pcout<<"FORWARD FFT"<<std::endl;
+      fftw_destroy_plan(p);
+
+    }
   }
   else
   {
-    p = fftw_mpi_plan_dft_3d(nf3, nf2, nf1,dummy, dummy, mpi_communicator, FFTW_FORWARD, FFTW_ESTIMATE);
-    fftw_execute(p);
-    pcout<<"FORWARD FFT"<<std::endl;
-    fftw_destroy_plan(p);
-
+    AssertThrow(true, ExcNotImplemented());
   }
 
 }
@@ -1057,7 +1101,7 @@ void NUFFT3D3::fast_gaussian_gridding_on_output()
 // We apply a second deconvolution to correct the first Gaussian Gridding.
 // Once again this is a local operation and we can use TaskGroup inside every
 // MPI processor to gain a multicore parallelism.
-void NUFFT3D3::deconvolution_after_fft()
+void NUFFT3D3::scaling_output_gridding()
 {
   TimerOutput::Scope t(computing_timer, " Deconvolution after FFT ");
 
@@ -1071,7 +1115,7 @@ void NUFFT3D3::deconvolution_after_fft()
     xb[2] = -xb[2];
   }
 
-  auto f_deconvolution_after_fft = [] (IndexSet::ElementIterator j_it, double t1, double t2, double t3, std::vector<double> &output_vector_copy, const NUFFT3D3 *foo_nufft)
+  auto f_scaling_output_gridding = [] (IndexSet::ElementIterator j_it, double t1, double t2, double t3, std::vector<double> &output_vector_copy, const NUFFT3D3 *foo_nufft)
   {
     types::global_dof_index j=*j_it;
     std::complex<double> helper(output_vector_copy[2*j],output_vector_copy[2*j+1]);
@@ -1093,13 +1137,13 @@ void NUFFT3D3::deconvolution_after_fft()
     output_vector_copy[2*j+1] = helper.imag();
   };
 
-  Threads::TaskGroup<> deconvolution_after_fft_group;
+  Threads::TaskGroup<> scaling_output_gridding_group;
   // We need to deconvolve the output array so we use output_set.
   for(auto j_it=output_set.begin(); j_it!=output_set.end(); ++j_it)
   {
-    deconvolution_after_fft_group += Threads::new_task ( static_cast<void (*)(IndexSet::ElementIterator, double, double, double, std::vector<double> &, const NUFFT3D3 *)> (f_deconvolution_after_fft), j_it, t1, t2, t3, output_vector, this);
+    scaling_output_gridding_group += Threads::new_task ( static_cast<void (*)(IndexSet::ElementIterator, double, double, double, std::vector<double> &, const NUFFT3D3 *)> (f_scaling_output_gridding), j_it, t1, t2, t3, output_vector, this);
   }
-  deconvolution_after_fft_group.join_all();
+  scaling_output_gridding_group.join_all();
 
   // Finally we perform a AlltoAll Reduction to recover the complet
   // vector to be returned.
@@ -1124,20 +1168,24 @@ void NUFFT3D3::run()
   compute_tolerance_infos();
   // 3) We create the IndexSets for the MPI parallelism.
   create_index_sets();
-  // 4) First Gaussian Gridding from the input array to
-  // the fine grid
-  fast_gaussian_gridding_on_input();
-  // 5) Deconvolution for the Second FGG (8)
-  deconvolution_before_fft();
-  // 6) Compute the 3d FFT using FFTW
+
+  input_gridding();
+  // // 4) First Gaussian Gridding from the input array to
+  // // the fine grid
+  // fast_gaussian_gridding_on_input();
+  // // 5) Deconvolution for the Second FGG (8)
+  // scaling_input_gridding();
+  // // 6) Compute the 3d FFT using FFTW
   compute_fft_3d();
   // 7) Local circular shifting
   shift_data_for_fftw3d();
-  // 8) Second FGG from the transformed fine grid to the
-  // output array.
-  fast_gaussian_gridding_on_output();
-  // 9) Deconvolution to correct the First FGG (4)
-  deconvolution_after_fft();
+
+  output_gridding();
+  // // 8) Second FGG from the transformed fine grid to the
+  // // output array.
+  // fast_gaussian_gridding_on_output();
+  // // 9) Deconvolution to correct the First FGG (4)
+  // scaling_output_gridding();
   // fine_grid_data.reinit(0);
   computing_timer.print_summary ();
   computing_timer.reset ();

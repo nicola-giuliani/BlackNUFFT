@@ -38,7 +38,7 @@ class NUFFT3D3
 
     /** Class constructor, we need the input - output grids and the relative vectors. We require
     an MPI communicator to set up the distributed fine grid vector. By default we consider MPI_COMM_WORLD*/
-    void init_nufft(double eps, bool fft_bool);
+    void init_nufft(double eps, bool fft_bool, std::string gridding_input="FGG", std::string fft_input="FFTW");
 
     /** The driver of the function. It calls all the needed function of the private part*/
     void run();
@@ -77,6 +77,9 @@ class NUFFT3D3
     processor.*/
     void create_index_sets_for_first_gridding(const unsigned int sets_number = 2);
 
+    /** This functions computes the gridding  from the input vector to
+    the distributed fine grid array. It allows for different gridding choices.*/
+    void input_gridding();
     /** This functions computes the Fast Gaussian Gridding from the input vector to
     the distributed fine grid array. This has been parallelised using two nested TBB
     WorkStream functions to achieve maximum shared memory parallelism, together with a
@@ -86,7 +89,7 @@ class NUFFT3D3
     /** This function computes the deconvolution of the second FGG, done by fast_gaussian_gridding_on_output.
     We perform the gridding on the fine grid data. It is a puntual operation on each processor regarding
      the owned fine data array.*/
-    void deconvolution_before_fft();
+    void scaling_input_gridding();
 
     /** This function calls the MPI fft3d using the FFTW package.*/
     void compute_fft_3d();
@@ -95,6 +98,10 @@ class NUFFT3D3
     It is a local multiplication of -1.*/
     void shift_data_for_fftw3d();
 
+    /** This functions computes the gridding  from the distributed fine grid array  to
+    the output vector. It allows for different gridding choices.*/
+    void output_gridding();
+
     /** This functions computes the Fast Gaussian Gridding from the fine array to
     the output vector. This has been parallelised using TBB
     WorkStream functions to achieve maximum shared memory parallelism. We only computed the
@@ -102,7 +109,7 @@ class NUFFT3D3
     void fast_gaussian_gridding_on_output();
 
     /* Second deconvolution on the output array to correct the effect of fast_gaussian_gridding_on_input();*/
-    void deconvolution_after_fft();
+    void scaling_output_gridding();
 
 
     void prune_before();
@@ -139,6 +146,9 @@ class NUFFT3D3
 
     /// Prescribed tolerance
     double epsilon;
+
+    /// String parameters specifying the kind of gridding and FFT
+    std::string gridding, fft_type;
 
     // Bunch of precision realted parameters
 
