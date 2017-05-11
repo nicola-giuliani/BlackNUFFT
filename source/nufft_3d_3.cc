@@ -29,7 +29,7 @@ int next235(double in)
   goto FOO;
 }
 
-NUFFT3D3::NUFFT3D3(const std::vector<std::vector<double> > &in_grid, const std::vector<double> &in, std::vector<std::vector<double> > &out_grid, std::vector<double> &out, MPI_Comm comm_in)
+BlackNUFFT::BlackNUFFT(const std::vector<std::vector<double> > &in_grid, const std::vector<double> &in, std::vector<std::vector<double> > &out_grid, std::vector<double> &out, MPI_Comm comm_in)
   :
   input_grid(in_grid),
   output_grid(out_grid),
@@ -50,7 +50,7 @@ NUFFT3D3::NUFFT3D3(const std::vector<std::vector<double> > &in_grid, const std::
 // A simple initialiser that resizes the grid parameters and the number of points.
 // We have put an Assert to check that the requested tolerance is right.
 
-void NUFFT3D3::init_nufft(double eps, bool fft_bool, std::string gridding_input, std::string fft_input)
+void BlackNUFFT::init_nufft(double eps, bool fft_bool, std::string gridding_input, std::string fft_input)
 {
   TimerOutput::Scope t(computing_timer, " Initialisation ");
   nj = input_grid[0].size();
@@ -64,12 +64,13 @@ void NUFFT3D3::init_nufft(double eps, bool fft_bool, std::string gridding_input,
   fft_backward = fft_bool;
   gridding = gridding_input;
   fft_type = fft_input;
+  pcout<<"Using "<<gridding<<" as gridding tool and "<<fft_type<<" as backend FFT library"<<std::endl;
 }
 
 
 // Inside this function we need to create the 4 index sets we need in the computations.
 
-void NUFFT3D3::create_index_sets()
+void BlackNUFFT::create_index_sets()
 {
   TimerOutput::Scope t(computing_timer, " Computing IndexSets ");
 
@@ -142,7 +143,7 @@ void NUFFT3D3::create_index_sets()
 // along the third dimension we have chosen to split the second one. We use 2*nspread to identify
 // regions that can't have racing condition and we subdivide the grid in odd and even part. We will
 // perform two TBB cycle on odd and even separately.
-void NUFFT3D3::create_index_sets_for_first_gridding(const unsigned int sets_number)
+void BlackNUFFT::create_index_sets_for_first_gridding(const unsigned int sets_number)
 {
   grid_sets.clear();
   grid_sets.resize(sets_number);
@@ -227,7 +228,7 @@ void NUFFT3D3::create_index_sets_for_first_gridding(const unsigned int sets_numb
 // and the spread of the Gaussian convolution (nspread).
 // We have chosen to maintain Greengard's optimisations by means of unlooped
 // for cycles.
-void NUFFT3D3::compute_tolerance_infos()
+void BlackNUFFT::compute_tolerance_infos()
 {
   TimerOutput::Scope t(computing_timer, " Tolerance Infos ");
 
@@ -325,7 +326,7 @@ void NUFFT3D3::compute_tolerance_infos()
 // We need both the box spans and midpoints in order to perform all the FFT computations
 // in the interval around the origin and then translate it back.
 
-void NUFFT3D3::compute_ranges()
+void BlackNUFFT::compute_ranges()
 {
   TimerOutput::Scope t(computing_timer, " Compute Ranges ");
 
@@ -362,7 +363,7 @@ void NUFFT3D3::compute_ranges()
 }
 
 
-void NUFFT3D3::input_gridding()
+void BlackNUFFT::input_gridding()
 {
   TimerOutput::Scope t(computing_timer, " Input Gridding ");
 
@@ -377,7 +378,7 @@ void NUFFT3D3::input_gridding()
   }
 }
 
-void NUFFT3D3::output_gridding()
+void BlackNUFFT::output_gridding()
 {
   TimerOutput::Scope t(computing_timer, " Output Gridding ");
 
@@ -395,7 +396,7 @@ void NUFFT3D3::output_gridding()
 // This function performs the initial Gaussian gridding. We have chosen to maintain
 // Greengard's fast implementation of the Gauss function. This is essential since
 // this function and its counterpart are very computationally expensive.
-void NUFFT3D3::fast_gaussian_gridding_on_input()
+void BlackNUFFT::fast_gaussian_gridding_on_input()
 {
   TimerOutput::Scope t(computing_timer, " Fast Gaussian Gridding on Inputs ");
 
@@ -447,7 +448,7 @@ void NUFFT3D3::fast_gaussian_gridding_on_input()
 
   };
 
-  // The worker function uses the capture to know the actual state of the NUFFT3D3 class.
+  // The worker function uses the capture to know the actual state of the BlackNUFFT class.
   // In this way we can perform the computation
   // of the column to be added at each row quite straigtforwardly. Since all the
   // workers must be able to run in parallel we must be sure that no racing condition occurs.
@@ -546,7 +547,7 @@ void NUFFT3D3::fast_gaussian_gridding_on_input()
     if(fftw3_set.is_element(2 * (copy_data.jb1 + copy_data.jb2*nf1 + copy_data.jb3*nf1*nf2)))
     {
 
-    auto fgg_putter = [](unsigned int k3, parallel::distributed::Vector<double> &copy_fine_grid_data, const FGGCopy &copy_data, const NUFFT3D3 * foo_nufft)
+    auto fgg_putter = [](unsigned int k3, parallel::distributed::Vector<double> &copy_fine_grid_data, const FGGCopy &copy_data, const BlackNUFFT * foo_nufft)
     {
       unsigned int local_index = 2*(k3*(2*foo_nufft->nspread*2*foo_nufft->nspread));
       for(unsigned int k2 = 0; k2<2*foo_nufft->nspread; ++k2)
@@ -583,7 +584,7 @@ void NUFFT3D3::fast_gaussian_gridding_on_input()
         }
       }
 
-      // group_fgg_putter += Threads::new_task ( static_cast<void (*)(unsigned int, parallel::distributed::Vector<double> &, const FGGCopy &, const NUFFT3D3 *)> (fgg_putter), k3, fine_grid_data, copy_data, this);
+      // group_fgg_putter += Threads::new_task ( static_cast<void (*)(unsigned int, parallel::distributed::Vector<double> &, const FGGCopy &, const BlackNUFFT *)> (fgg_putter), k3, fine_grid_data, copy_data, this);
     }
     // group_fgg_putter.join_all();
     }
@@ -634,12 +635,12 @@ void NUFFT3D3::fast_gaussian_gridding_on_input()
 // Gaussian gridding. This should be just a pointwise multiplication. For this
 // reason we can use TaskGroup withuot caring about racing conditions.
 
-void NUFFT3D3::scaling_input_gridding()
+void BlackNUFFT::scaling_input_gridding()
 {
   TimerOutput::Scope t(computing_timer, " Deconvolution Before FFT ");
 
 
-  auto f_scaling_input_gridding = [] (types::global_dof_index k2, types::global_dof_index k1, parallel::distributed::Vector<double> &fine_grid_data_copy, const NUFFT3D3 *foo_nufft)
+  auto f_scaling_input_gridding = [] (types::global_dof_index k2, types::global_dof_index k1, parallel::distributed::Vector<double> &fine_grid_data_copy, const BlackNUFFT *foo_nufft)
   {
 
     types::global_dof_index ii;
@@ -690,7 +691,7 @@ void NUFFT3D3::scaling_input_gridding()
   {
      for(types::global_dof_index k1 = 0; k1<2*iw7+1; ++k1)
      {
-      scaling_input_gridding_group += Threads::new_task ( static_cast<void (*)(types::global_dof_index, types::global_dof_index, parallel::distributed::Vector<double> &, const NUFFT3D3 *)> (f_scaling_input_gridding), k2, k1, fine_grid_data, this);
+      scaling_input_gridding_group += Threads::new_task ( static_cast<void (*)(types::global_dof_index, types::global_dof_index, parallel::distributed::Vector<double> &, const BlackNUFFT *)> (f_scaling_input_gridding), k2, k1, fine_grid_data, this);
      }
   }
   scaling_input_gridding_group.join_all();
@@ -707,7 +708,7 @@ void NUFFT3D3::scaling_input_gridding()
 
 
 // TO BE REMOVED
-void NUFFT3D3::shift_data_before_fft()
+void BlackNUFFT::shift_data_before_fft()
 {
   TimerOutput::Scope t(computing_timer, " Shift before FFT ");
 
@@ -821,7 +822,7 @@ void NUFFT3D3::shift_data_before_fft()
 
 // This function computes the 3d fft on the fine array. We have chosen to use
 // the state of the art FFTW library.
-void NUFFT3D3::compute_fft_3d()
+void BlackNUFFT::compute_fft_3d()
 {
   TimerOutput::Scope t(computing_timer, " 3D FFTW ");
   if(fft_type == "FFTW")
@@ -864,12 +865,12 @@ void NUFFT3D3::compute_fft_3d()
 // to multiply each element by -1^(i+j+k). This is a local operation so we can use
 // TaskGroup withot caring on synchronisation.
 // TODO: Find a smarter way than pow(-1,i+j+k).
-void NUFFT3D3::shift_data_for_fftw3d()
+void BlackNUFFT::shift_data_for_fftw3d()
 {
   TimerOutput::Scope t(computing_timer, " Shift Data for FFTW3D ");
 
 
-  auto f_shift_odd_start = [] (types::global_dof_index k3, parallel::distributed::Vector<double> &fine_grid_data_copy, const NUFFT3D3 *foo_nufft)
+  auto f_shift_odd_start = [] (types::global_dof_index k3, parallel::distributed::Vector<double> &fine_grid_data_copy, const BlackNUFFT *foo_nufft)
   {
 
       for(types::global_dof_index k2 = 0; k2 < (foo_nufft->nf2)*foo_nufft->nf1; k2=k2+2)
@@ -879,7 +880,7 @@ void NUFFT3D3::shift_data_for_fftw3d()
 
       }
   };
-  auto f_shift_even_start = [] (types::global_dof_index k3, parallel::distributed::Vector<double> &fine_grid_data_copy, const NUFFT3D3 *foo_nufft)
+  auto f_shift_even_start = [] (types::global_dof_index k3, parallel::distributed::Vector<double> &fine_grid_data_copy, const BlackNUFFT *foo_nufft)
   {
 
       for(types::global_dof_index k2 = 0; k2 < foo_nufft->nf2; k2=k2+1)
@@ -893,7 +894,7 @@ void NUFFT3D3::shift_data_for_fftw3d()
       }
     }
   };
-  auto f_shift = [] (types::global_dof_index k3, parallel::distributed::Vector<double> &fine_grid_data_copy, const NUFFT3D3 *foo_nufft)
+  auto f_shift = [] (types::global_dof_index k3, parallel::distributed::Vector<double> &fine_grid_data_copy, const BlackNUFFT *foo_nufft)
   {
       for(types::global_dof_index k2 = 0; k2 < (foo_nufft->nf2); ++k2)
       {
@@ -924,7 +925,7 @@ void NUFFT3D3::shift_data_for_fftw3d()
   // We need the shift only on the locally owned data.
   for(types::global_dof_index k3 = local_nf3_start; k3<(local_nf3+local_nf3_start); ++k3)
   {
-      shift_data_group += Threads::new_task ( static_cast<void (*)(types::global_dof_index, parallel::distributed::Vector<double> &, const NUFFT3D3 *)> (f_shift), k3, fine_grid_data, this);
+      shift_data_group += Threads::new_task ( static_cast<void (*)(types::global_dof_index, parallel::distributed::Vector<double> &, const BlackNUFFT *)> (f_shift), k3, fine_grid_data, this);
   }
 
   shift_data_group.join_all();
@@ -941,7 +942,7 @@ void NUFFT3D3::shift_data_for_fftw3d()
 // We need a second Fast Gaussian Gridding to recover the result on the desired points.
 // There should not be much synchronisations in this algorithm, therefore we can use straightforwardly
 // WorkStream on the output set without splitting the grid.
-void NUFFT3D3::fast_gaussian_gridding_on_output()
+void BlackNUFFT::fast_gaussian_gridding_on_output()
 {
   TimerOutput::Scope t(computing_timer, " Fast Guassian Gridding on Output ");
   double t1 = numbers::PI/r2lamb1;
@@ -971,7 +972,7 @@ void NUFFT3D3::fast_gaussian_gridding_on_output()
 
   };
 
-  // The worker function uses the capture to know the actual state of the NUFFT3D3 class.
+  // The worker function uses the capture to know the actual state of the BlackNUFFT class.
   // In this way we can perform the computation
   // of the column to be added at each row quite straigtforwardly. Since all the
   // workers must be able to run in parallel we must be sure that no racing condition occurs.
@@ -1101,7 +1102,7 @@ void NUFFT3D3::fast_gaussian_gridding_on_output()
 // We apply a second deconvolution to correct the first Gaussian Gridding.
 // Once again this is a local operation and we can use TaskGroup inside every
 // MPI processor to gain a multicore parallelism.
-void NUFFT3D3::scaling_output_gridding()
+void BlackNUFFT::scaling_output_gridding()
 {
   TimerOutput::Scope t(computing_timer, " Deconvolution after FFT ");
 
@@ -1115,7 +1116,7 @@ void NUFFT3D3::scaling_output_gridding()
     xb[2] = -xb[2];
   }
 
-  auto f_scaling_output_gridding = [] (IndexSet::ElementIterator j_it, double t1, double t2, double t3, std::vector<double> &output_vector_copy, const NUFFT3D3 *foo_nufft)
+  auto f_scaling_output_gridding = [] (IndexSet::ElementIterator j_it, double t1, double t2, double t3, std::vector<double> &output_vector_copy, const BlackNUFFT *foo_nufft)
   {
     types::global_dof_index j=*j_it;
     std::complex<double> helper(output_vector_copy[2*j],output_vector_copy[2*j+1]);
@@ -1141,7 +1142,7 @@ void NUFFT3D3::scaling_output_gridding()
   // We need to deconvolve the output array so we use output_set.
   for(auto j_it=output_set.begin(); j_it!=output_set.end(); ++j_it)
   {
-    scaling_output_gridding_group += Threads::new_task ( static_cast<void (*)(IndexSet::ElementIterator, double, double, double, std::vector<double> &, const NUFFT3D3 *)> (f_scaling_output_gridding), j_it, t1, t2, t3, output_vector, this);
+    scaling_output_gridding_group += Threads::new_task ( static_cast<void (*)(IndexSet::ElementIterator, double, double, double, std::vector<double> &, const BlackNUFFT *)> (f_scaling_output_gridding), j_it, t1, t2, t3, output_vector, this);
   }
   scaling_output_gridding_group.join_all();
 
@@ -1158,7 +1159,7 @@ void NUFFT3D3::scaling_output_gridding()
 
 // The run function drives the NUFFT. Essentially it needs to call all the functions in order to
 // recover a proper NUFFT of type 3.
-void NUFFT3D3::run()
+void BlackNUFFT::run()
 {
   computing_timer.reset ();
   computing_timer.disable_output();
@@ -1194,7 +1195,7 @@ void NUFFT3D3::run()
 
 
 // TODO: ERASE??
-void NUFFT3D3::prune_before()
+void BlackNUFFT::prune_before()
 {
   TimerOutput::Scope t(computing_timer, " First Pruning ");
 
@@ -1252,7 +1253,7 @@ void NUFFT3D3::prune_before()
 
 // This is the original Greengard pruned FFT put in C++. We have decided
 // not to use it since FFTW is surely more optimised.
-void NUFFT3D3::compute_stubborn_fft()
+void BlackNUFFT::compute_stubborn_fft()
 {
   TimerOutput::Scope t(computing_timer, " Stubborn FFT with FFTW 1d ");
 
@@ -1438,7 +1439,7 @@ void NUFFT3D3::compute_stubborn_fft()
   //   }
 }
 
-void NUFFT3D3::prune_after()
+void BlackNUFFT::prune_after()
 {
   TimerOutput::Scope t(computing_timer, " Prune After ");
 

@@ -28,13 +28,13 @@ using namespace dealii;
 
 /** The class that implements the Non Uniform FFT of type 3.
 */
-class NUFFT3D3
+class BlackNUFFT
 {
   public:
 
     /** Class constructor, we need the input - output grids and the relative vectors. We require
     an MPI communicator to set up the distributed fine grid vector. By default we consider MPI_COMM_WORLD*/
-    NUFFT3D3(const std::vector<std::vector<double> > &in_grid, const std::vector<double> &in , std::vector<std::vector<double> > &out_grid, std::vector<double> &out, MPI_Comm comm_in=MPI_COMM_WORLD);
+    BlackNUFFT(const std::vector<std::vector<double> > &in_grid, const std::vector<double> &in , std::vector<std::vector<double> > &out_grid, std::vector<double> &out, MPI_Comm comm_in=MPI_COMM_WORLD);
 
     /** Class constructor, we need the input - output grids and the relative vectors. We require
     an MPI communicator to set up the distributed fine grid vector. By default we consider MPI_COMM_WORLD*/
