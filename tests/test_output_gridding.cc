@@ -85,12 +85,15 @@ void test()
     my_nufft.create_index_sets();
     my_nufft.input_gridding();
 
-    my_nufft.computing_timer.disable_output();
+    for(auto i : my_nufft.fine_grid_data.locally_owned_elements())
+      my_nufft.fine_grid_data[i]=1.;
 
     my_nufft.fine_grid_data.locally_owned_elements().print(std::cout);
+    my_nufft.output_gridding();
     for(types::global_dof_index i =0; i<2*nk; ++i)
       std::cout<<out_vec_ptr[i]<<" ";
     std::cout<<std::endl;
+    my_nufft.computing_timer.disable_output();
 
 
 }
