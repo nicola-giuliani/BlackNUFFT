@@ -31,7 +31,7 @@ using namespace dealii;
 class BlackNUFFT
 {
 public:
-
+  friend void test();
   /** Class constructor, we need the input - output grids and the relative vectors. We require
   an MPI communicator to set up the distributed fine grid vector. By default we consider MPI_COMM_WORLD*/
   BlackNUFFT(const std::vector<std::vector<double> > &in_grid, const std::vector<double> &in , std::vector<std::vector<double> > &out_grid, std::vector<double> &out, MPI_Comm comm_in=MPI_COMM_WORLD);
