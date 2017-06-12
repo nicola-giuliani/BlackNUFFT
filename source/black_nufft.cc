@@ -1009,13 +1009,13 @@ void BlackNUFFT::shift_data_for_fftw3d()
   Threads::TaskGroup<> shift_data_group;
   // We need the shift only on the locally owned data.
   types::global_dof_index blocking=10;
-  // tbb::parallel_for(blocked_range<types::global_dof_index> (local_nf3_start, local_nf3+local_nf3_start,blocking), f_shift_tbb);
-  for (types::global_dof_index k3 = local_nf3_start; k3<(local_nf3+local_nf3_start); ++k3)
-    {
-      shift_data_group += Threads::new_task ( static_cast<void (*)(types::global_dof_index, parallel::distributed::Vector<double> &, const BlackNUFFT *)> (f_shift), k3, fine_grid_data, this);
-    }
-
-  shift_data_group.join_all();
+  tbb::parallel_for(blocked_range<types::global_dof_index> (local_nf3_start, local_nf3+local_nf3_start,blocking), f_shift_tbb);
+  // for (types::global_dof_index k3 = local_nf3_start; k3<(local_nf3+local_nf3_start); ++k3)
+  //   {
+  //     shift_data_group += Threads::new_task ( static_cast<void (*)(types::global_dof_index, parallel::distributed::Vector<double> &, const BlackNUFFT *)> (f_shift), k3, fine_grid_data, this);
+  //   }
+  //
+  // shift_data_group.join_all();
 
   // Now we can distribute the results of the shifted 3d FFT.
   fine_grid_data.compress(VectorOperation::add);
