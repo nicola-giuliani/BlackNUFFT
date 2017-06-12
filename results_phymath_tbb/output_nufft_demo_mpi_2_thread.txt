@@ -1,0 +1,26 @@
+2 0
+2 1
+Using FGG as gridding tool and FFTW as backend FFT library
+ Input work Balance : 726187 elements over 2097152
+ Output work Balance : 1048576 elements over 2097152
+FORWARD FFT
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      79.1s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| 3D FFTW                         |         1 |      12.4s |        16% |
+| Compute Ranges                  |         1 |    0.0125s |         0% |
+| Computing IndexSets             |         1 |      2.06s |       2.6% |
+| Deconvolution Before FFT        |         1 |      1.63s |       2.1% |
+| Deconvolution after FFT         |         1 |     0.134s |      0.17% |
+| Fast Gaussian Gridding on Inputs|         1 |      38.3s |        48% |
+| Fast Guassian Gridding on Output|         1 |      23.1s |        29% |
+| Input Gridding                  |         1 |        40s |        51% |
+| Output Gridding                 |         1 |      23.2s |        29% |
+| Shift Data for FFTW3D           |         1 |      1.52s |       1.9% |
+| Tolerance Infos                 |         1 |   8.8e-05s |         0% |
++---------------------------------+-----------+------------+------------+
+
