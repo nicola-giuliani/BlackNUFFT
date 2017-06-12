@@ -696,6 +696,8 @@ void BlackNUFFT::scaling_input_gridding()
             fine_grid_data_copy[is2] = zz.real();
             fine_grid_data_copy[is2+1] = zz.imag();
           }
+        // std::cout<<is2<<" ";
+
       }
   };
 
@@ -703,6 +705,7 @@ void BlackNUFFT::scaling_input_gridding()
   {
     for (types::global_dof_index k2=r.begin(); k2<r.end(); ++k2)
       {
+        // std::cout<<"k2 : "<<k2<<std::endl;
         for (types::global_dof_index k1=0; k1<2*iw7+1; ++k1)
           {
             types::global_dof_index ii;
@@ -745,8 +748,10 @@ void BlackNUFFT::scaling_input_gridding()
                     fine_grid_data[is2] = zz.real();
                     fine_grid_data[is2+1] = zz.imag();
                   }
+                // std::cout<<is2<<" ";
               }
           }
+        // std::cout<<std::endl;
       }
   };
 
@@ -755,10 +760,14 @@ void BlackNUFFT::scaling_input_gridding()
 
   // for (types::global_dof_index k2 = 0; k2<2*iw8+1; ++k2)
   //   {
+  //     // std::cout<<"k2 : "<<k2<<std::endl;
   //     for (types::global_dof_index k1 = 0; k1<2*iw7+1; ++k1)
   //       {
   //         scaling_input_gridding_group += Threads::new_task ( static_cast<void (*)(types::global_dof_index, types::global_dof_index, parallel::distributed::Vector<double> &, const BlackNUFFT *)> (f_scaling_input_gridding), k2, k1, fine_grid_data, this);
+  //         // f_scaling_input_gridding(k2,k1,fine_grid_data,this);
   //       }
+  //       // std::cout<<std::endl;
+  //
   //   }
   // scaling_input_gridding_group.join_all();
 
