@@ -250,84 +250,84 @@ void BlackNUFFT::compute_tolerance_infos()
   //It is the oversampling RATio. Mr/M = (fine grid point with oversampling) / (fine grid point)
   // the more accuracy you require the more you have to oversample.
 
-  if(gridding == "FGG")
-  {
-  if (epsilon <= 1e-12)
-    rat = 3.;
-  else if (epsilon <= 1e-11)
-    rat = std::sqrt(3.3);
-  else
-    rat = std::sqrt(2.2);
-
-  // int(-log(eps)/(pi*(rat-1d0)/(rat-.5d0)) + .5d0)
-  nspread = int(-std::log(epsilon)/(numbers::PI*(rat-1.)/(rat-.5)) + .5);
-
-  // Grid span parameters
-  double t1 = 2. * xm[0] * sm[0] / numbers::PI;
-  double t2 = 2. * xm[1] * sm[1] / numbers::PI;
-  double t3 = 2. * xm[2] * sm[2] / numbers::PI;
-
-  // pcout<<rat<<" "<<xm[2]<<" "<<sm[2]<<std::endl;
-
-  // Oversampled grid sizes.
-  nf1 = (types::global_dof_index)next235(rat*std::max(rat*t1+2*nspread,2*nspread/(rat-1)));
-  nf2 = (types::global_dof_index)next235(rat*std::max(rat*t2+2*nspread,2*nspread/(rat-1)));
-  nf3 = (types::global_dof_index)next235(rat*std::max(rat*t3+2*nspread,2*nspread/(rat-1)));
-
-
-  // Oversampling parameters in the 3 directions.
-  rat1 = (std::sqrt(nf1*t1+nspread*nspread)-nspread)/t1;
-  rat2 = (std::sqrt(nf2*t2+nspread*nspread)-nspread)/t2;
-  rat3 = (std::sqrt(nf3*t3+nspread*nspread)-nspread)/t3;
-
-
-  r2lamb1 = rat1 * rat1 * nspread / (rat1*(rat1-0.5));
-  r2lamb2 = rat2 * rat2 * nspread / (rat2*(rat2-0.5));
-  r2lamb3 = rat3 * rat3 * nspread / (rat3*(rat3-0.5));
-
-
-  hx = numbers::PI/(rat1*sm[0]);
-  hs = double(2)*numbers::PI/double(nf1)/hx;
-  hy = numbers::PI/(rat2*sm[1]);
-  ht = double(2)*numbers::PI/double(nf2)/hy;
-  hz = numbers::PI/(rat3*sm[2]);
-  // pcout<<xm[2]<<std::endl;
-  hu = double(2)*numbers::PI/double(nf3)/hz;
-
-  iw7 = (types::global_dof_index)(nf1*(r2lamb1-nspread)/r2lamb1+.1);
-  iw8 = (types::global_dof_index)(nf2*(r2lamb2-nspread)/r2lamb2+.1);
-  iw9 = (types::global_dof_index)(nf3*(r2lamb3-nspread)/r2lamb3+.1);
-
-  // pcout<<epsilon<<" "<<nspread<<" "<<nf1<<" "<<nf2<<" "<<nf3<<std::endl;
-  // pcout<<iw7<<" "<<iw8<<" "<<iw9<<" "<<std::endl;
-
-
-  double t4 = numbers::PI * r2lamb1 / double(nf1*nf1);
-  double cross1 = (1. - 2. * (nf1/2 % 2)) / r2lamb1;
-  deconv_array_x.reinit(iw7+1);
-  for ( types::global_dof_index k1 = 0; k1 <= iw7; ++k1)
+  if (gridding == "FGG")
     {
-      deconv_array_x[k1] = cross1*std::exp(t4*double(k1*k1));
-      cross1 = -cross1;
-    }
-  double t5 = numbers::PI * r2lamb2 / double(nf2*nf2);
-  cross1 = 1./r2lamb2;
-  deconv_array_y.reinit(iw8+1);
-  for ( types::global_dof_index k1 = 0; k1 <= iw8; ++k1)
-    {
-      deconv_array_y[k1] = cross1*std::exp(t5*double(k1*k1));
-      cross1 = -cross1;
-    }
-  double t6 = numbers::PI * r2lamb3 / double(nf3*nf3);
-  cross1 = 1./r2lamb3;
-  deconv_array_z.reinit(iw9+1);
-  for ( types::global_dof_index k1 = 0; k1 <= iw9; ++k1)
-    {
-      deconv_array_z[k1] = cross1*std::exp(t6*k1*k1);
-      cross1 = -cross1;
-    }
+      if (epsilon <= 1e-12)
+        rat = 3.;
+      else if (epsilon <= 1e-11)
+        rat = std::sqrt(3.3);
+      else
+        rat = std::sqrt(2.2);
 
-  }
+      // int(-log(eps)/(pi*(rat-1d0)/(rat-.5d0)) + .5d0)
+      nspread = int(-std::log(epsilon)/(numbers::PI*(rat-1.)/(rat-.5)) + .5);
+
+      // Grid span parameters
+      double t1 = 2. * xm[0] * sm[0] / numbers::PI;
+      double t2 = 2. * xm[1] * sm[1] / numbers::PI;
+      double t3 = 2. * xm[2] * sm[2] / numbers::PI;
+
+      // pcout<<rat<<" "<<xm[2]<<" "<<sm[2]<<std::endl;
+
+      // Oversampled grid sizes.
+      nf1 = (types::global_dof_index)next235(rat*std::max(rat*t1+2*nspread,2*nspread/(rat-1)));
+      nf2 = (types::global_dof_index)next235(rat*std::max(rat*t2+2*nspread,2*nspread/(rat-1)));
+      nf3 = (types::global_dof_index)next235(rat*std::max(rat*t3+2*nspread,2*nspread/(rat-1)));
+
+
+      // Oversampling parameters in the 3 directions.
+      rat1 = (std::sqrt(nf1*t1+nspread*nspread)-nspread)/t1;
+      rat2 = (std::sqrt(nf2*t2+nspread*nspread)-nspread)/t2;
+      rat3 = (std::sqrt(nf3*t3+nspread*nspread)-nspread)/t3;
+
+
+      r2lamb1 = rat1 * rat1 * nspread / (rat1*(rat1-0.5));
+      r2lamb2 = rat2 * rat2 * nspread / (rat2*(rat2-0.5));
+      r2lamb3 = rat3 * rat3 * nspread / (rat3*(rat3-0.5));
+
+
+      hx = numbers::PI/(rat1*sm[0]);
+      hs = double(2)*numbers::PI/double(nf1)/hx;
+      hy = numbers::PI/(rat2*sm[1]);
+      ht = double(2)*numbers::PI/double(nf2)/hy;
+      hz = numbers::PI/(rat3*sm[2]);
+      // pcout<<xm[2]<<std::endl;
+      hu = double(2)*numbers::PI/double(nf3)/hz;
+
+      iw7 = (types::global_dof_index)(nf1*(r2lamb1-nspread)/r2lamb1+.1);
+      iw8 = (types::global_dof_index)(nf2*(r2lamb2-nspread)/r2lamb2+.1);
+      iw9 = (types::global_dof_index)(nf3*(r2lamb3-nspread)/r2lamb3+.1);
+
+      // pcout<<epsilon<<" "<<nspread<<" "<<nf1<<" "<<nf2<<" "<<nf3<<std::endl;
+      // pcout<<iw7<<" "<<iw8<<" "<<iw9<<" "<<std::endl;
+
+
+      double t4 = numbers::PI * r2lamb1 / double(nf1*nf1);
+      double cross1 = (1. - 2. * (nf1/2 % 2)) / r2lamb1;
+      deconv_array_x.reinit(iw7+1);
+      for ( types::global_dof_index k1 = 0; k1 <= iw7; ++k1)
+        {
+          deconv_array_x[k1] = cross1*std::exp(t4*double(k1*k1));
+          cross1 = -cross1;
+        }
+      double t5 = numbers::PI * r2lamb2 / double(nf2*nf2);
+      cross1 = 1./r2lamb2;
+      deconv_array_y.reinit(iw8+1);
+      for ( types::global_dof_index k1 = 0; k1 <= iw8; ++k1)
+        {
+          deconv_array_y[k1] = cross1*std::exp(t5*double(k1*k1));
+          cross1 = -cross1;
+        }
+      double t6 = numbers::PI * r2lamb3 / double(nf3*nf3);
+      cross1 = 1./r2lamb3;
+      deconv_array_z.reinit(iw9+1);
+      for ( types::global_dof_index k1 = 0; k1 <= iw9; ++k1)
+        {
+          deconv_array_z[k1] = cross1*std::exp(t6*k1*k1);
+          cross1 = -cross1;
+        }
+
+    }
   else
     AssertThrow(true, ExcNotImplemented());
 
@@ -701,53 +701,53 @@ void BlackNUFFT::scaling_input_gridding()
 
   auto f_scaling_input_gridding_tbb = [this] (blocked_range<types::global_dof_index> r)
   {
-    for(types::global_dof_index k2=r.begin(); k2<r.end(); ++k2)
-    {
-    for(types::global_dof_index k1=0; k1<2*iw7+1; ++k1)
-    {
-    types::global_dof_index ii;
-    ii = ( nf1/2+k1- iw7) +
-         ( nf2/2+k2- iw8)* nf1 +
-         ( nf3/2)* nf1* nf2;
-
-    double cross =  deconv_array_x[std::abs((types::signed_global_dof_index)k1-(types::signed_global_dof_index) iw7)] *
-                    deconv_array_y[std::abs((types::signed_global_dof_index)k2-(types::signed_global_dof_index) iw8)];
-
-    std::complex<double> c2;
-    std::complex<double> zz;
-
-    if ( fftw3_set.is_element(2*ii))
+    for (types::global_dof_index k2=r.begin(); k2<r.end(); ++k2)
       {
-        c2 = std::complex<double>(fine_grid_data[2*ii],fine_grid_data[2*ii+1]);
-        zz = (cross* deconv_array_z[0])*c2;
-        fine_grid_data[2*ii] = zz.real();
-        fine_grid_data[2*ii+1] = zz.imag();
-      }
-
-    for (types::global_dof_index k3 = 1; k3 <=  iw9; ++k3)
-      {
-
-        types::global_dof_index is2;
-
-        is2 = 2*(ii+k3* nf1* nf2);
-        if ( fftw3_set.is_element(is2))
+        for (types::global_dof_index k1=0; k1<2*iw7+1; ++k1)
           {
-            c2 = std::complex<double>(fine_grid_data[is2],fine_grid_data[is2+1]);
-            zz = (cross* deconv_array_z[k3])*c2;
-            fine_grid_data[is2] = zz.real();
-            fine_grid_data[is2+1] = zz.imag();
-          }
-        is2 = 2*(ii-k3* nf1* nf2);
-        if ( fftw3_set.is_element(is2))
-          {
-            c2 = std::complex<double>(fine_grid_data[is2],fine_grid_data[is2+1]);
-            zz = (cross* deconv_array_z[k3])*c2;
-            fine_grid_data[is2] = zz.real();
-            fine_grid_data[is2+1] = zz.imag();
+            types::global_dof_index ii;
+            ii = ( nf1/2+k1- iw7) +
+                 ( nf2/2+k2- iw8)* nf1 +
+                 ( nf3/2)* nf1* nf2;
+
+            double cross =  deconv_array_x[std::abs((types::signed_global_dof_index)k1-(types::signed_global_dof_index) iw7)] *
+                            deconv_array_y[std::abs((types::signed_global_dof_index)k2-(types::signed_global_dof_index) iw8)];
+
+            std::complex<double> c2;
+            std::complex<double> zz;
+
+            if ( fftw3_set.is_element(2*ii))
+              {
+                c2 = std::complex<double>(fine_grid_data[2*ii],fine_grid_data[2*ii+1]);
+                zz = (cross* deconv_array_z[0])*c2;
+                fine_grid_data[2*ii] = zz.real();
+                fine_grid_data[2*ii+1] = zz.imag();
+              }
+
+            for (types::global_dof_index k3 = 1; k3 <=  iw9; ++k3)
+              {
+
+                types::global_dof_index is2;
+
+                is2 = 2*(ii+k3* nf1* nf2);
+                if ( fftw3_set.is_element(is2))
+                  {
+                    c2 = std::complex<double>(fine_grid_data[is2],fine_grid_data[is2+1]);
+                    zz = (cross* deconv_array_z[k3])*c2;
+                    fine_grid_data[is2] = zz.real();
+                    fine_grid_data[is2+1] = zz.imag();
+                  }
+                is2 = 2*(ii-k3* nf1* nf2);
+                if ( fftw3_set.is_element(is2))
+                  {
+                    c2 = std::complex<double>(fine_grid_data[is2],fine_grid_data[is2+1]);
+                    zz = (cross* deconv_array_z[k3])*c2;
+                    fine_grid_data[is2] = zz.real();
+                    fine_grid_data[is2+1] = zz.imag();
+                  }
+              }
           }
       }
-    }
-  }
   };
 
   Threads::TaskGroup<> scaling_input_gridding_group;
@@ -987,22 +987,22 @@ void BlackNUFFT::shift_data_for_fftw3d()
       }
   };
 
-  auto f_shift_tbb = [this] (const blocked_range<types::global_dof_index> & r)
+  auto f_shift_tbb = [this] (const blocked_range<types::global_dof_index> &r)
   {
-    for(types::global_dof_index k3=r.begin(); k3<r.end(); ++k3)
-    for (types::global_dof_index k2 = 0; k2 < (nf2); ++k2)
-      {
-        // types::global_dof_index ii = (nf2/2+k2-nspread-iw8)*nf1 + (nf3/2+k3-nspread-iw9)*nf1*nf2;
-        for (types::global_dof_index k1 = 0; k1 < (nf1); ++k1)
-          {
-            double multi = -2*(double)((k3+k2+k1)%2)+1;
-            fine_grid_data[2*(k3*nf1*nf2+k2*nf1+k1)] *= multi;//std::pow(-1,k3+k2+k1);
-            fine_grid_data[2*(k3*nf1*nf2+k2*nf1+k1)+1] *= multi;//std::pow(-1,k3+k2+k1);
+    for (types::global_dof_index k3=r.begin(); k3<r.end(); ++k3)
+      for (types::global_dof_index k2 = 0; k2 < (nf2); ++k2)
+        {
+          // types::global_dof_index ii = (nf2/2+k2-nspread-iw8)*nf1 + (nf3/2+k3-nspread-iw9)*nf1*nf2;
+          for (types::global_dof_index k1 = 0; k1 < (nf1); ++k1)
+            {
+              double multi = -2*(double)((k3+k2+k1)%2)+1;
+              fine_grid_data[2*(k3*nf1*nf2+k2*nf1+k1)] *= multi;//std::pow(-1,k3+k2+k1);
+              fine_grid_data[2*(k3*nf1*nf2+k2*nf1+k1)+1] *= multi;//std::pow(-1,k3+k2+k1);
 
 
-          }
+            }
 
-      }
+        }
   };
 
 
@@ -1227,27 +1227,27 @@ void BlackNUFFT::scaling_output_gridding()
 
   auto f_scaling_output_gridding_tbb = [this,t1,t2,t3] (blocked_range<unsigned int> r)
   {
-    for(types::global_dof_index j_it=r.begin(); j_it<r.end(); ++j_it)
-    {
-    types::global_dof_index j=output_set.nth_index_in_set(j_it);
-    std::complex<double> helper(output_vector[2*j],output_vector[2*j+1]);
-    // std::cout<<helper<<" ";
-    // double foo = (std::exp(t1*(foo_nufft->output_grid[0][j]-foo_nufft->sb[0])*(foo_nufft->output_grid[0][j]-foo_nufft->sb[0])
-    //                   +t2*(foo_nufft->output_grid[1][j]-foo_nufft->sb[1])*(foo_nufft->output_grid[1][j]-foo_nufft->sb[1])
-    //                   +t3*(foo_nufft->output_grid[2][j]-foo_nufft->sb[2])*(foo_nufft->output_grid[2][j]-foo_nufft->sb[2])));
-    helper = (std::exp(t1*(output_grid[0][j]-sb[0])*(output_grid[0][j]-sb[0])
-                       +t2*(output_grid[1][j]-sb[1])*(output_grid[1][j]-sb[1])
-                       +t3*(output_grid[2][j]-sb[2])*(output_grid[2][j]-sb[2])))*helper;
-    double ang = (output_grid[0][j]-sb[0])*xb[0] +
-                 (output_grid[1][j]-sb[1])*xb[1] +
-                 (output_grid[2][j]-sb[2])*xb[2];
-    std::complex<double> dummy(std::cos(ang),std::sin(ang));
-    helper = dummy * helper;
+    for (types::global_dof_index j_it=r.begin(); j_it<r.end(); ++j_it)
+      {
+        types::global_dof_index j=output_set.nth_index_in_set(j_it);
+        std::complex<double> helper(output_vector[2*j],output_vector[2*j+1]);
+        // std::cout<<helper<<" ";
+        // double foo = (std::exp(t1*(foo_nufft->output_grid[0][j]-foo_nufft->sb[0])*(foo_nufft->output_grid[0][j]-foo_nufft->sb[0])
+        //                   +t2*(foo_nufft->output_grid[1][j]-foo_nufft->sb[1])*(foo_nufft->output_grid[1][j]-foo_nufft->sb[1])
+        //                   +t3*(foo_nufft->output_grid[2][j]-foo_nufft->sb[2])*(foo_nufft->output_grid[2][j]-foo_nufft->sb[2])));
+        helper = (std::exp(t1*(output_grid[0][j]-sb[0])*(output_grid[0][j]-sb[0])
+                           +t2*(output_grid[1][j]-sb[1])*(output_grid[1][j]-sb[1])
+                           +t3*(output_grid[2][j]-sb[2])*(output_grid[2][j]-sb[2])))*helper;
+        double ang = (output_grid[0][j]-sb[0])*xb[0] +
+                     (output_grid[1][j]-sb[1])*xb[1] +
+                     (output_grid[2][j]-sb[2])*xb[2];
+        std::complex<double> dummy(std::cos(ang),std::sin(ang));
+        helper = dummy * helper;
 
 
-    output_vector[2*j] = helper.real();
-    output_vector[2*j+1] = helper.imag();
-  }
+        output_vector[2*j] = helper.real();
+        output_vector[2*j+1] = helper.imag();
+      }
   };
 
   Threads::TaskGroup<> scaling_output_gridding_group;
