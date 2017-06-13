@@ -1,28 +1,28 @@
-4 2
 4 0
-4 1
-Using FGG as gridding tool and FFTW as backend FFT library
 4 3
- Input work Balance : 177801 elements over 2097152
- Output work Balance : 486600 elements over 2097152
+4 1
+4 2
+Using FGG as gridding tool and FFTW as backend FFT library
+ Input work Balance : 95268 elements over 864000
+ Output work Balance : 200473 elements over 864000
 FORWARD FFT
 
 
 +---------------------------------------------+------------+------------+
-| Total wallclock time elapsed since start    |      46.4s |            |
+| Total wallclock time elapsed since start    |      26.5s |            |
 |                                             |            |            |
 | Section                         | no. calls |  wall time | % of total |
 +---------------------------------+-----------+------------+------------+
-| 3D FFTW                         |         1 |      6.85s |        15% |
-| Compute Ranges                  |         1 |    0.0127s |         0% |
-| Computing IndexSets             |         1 |      1.23s |       2.6% |
-| Deconvolution Before FFT        |         1 |       1.6s |       3.5% |
-| Deconvolution after FFT         |         1 |     0.744s |       1.6% |
-| Fast Gaussian Gridding on Inputs|         1 |      21.8s |        47% |
-| Fast Guassian Gridding on Output|         1 |        13s |        28% |
-| Input Gridding                  |         1 |      23.4s |        51% |
-| Output Gridding                 |         1 |      13.9s |        30% |
-| Shift Data for FFTW3D           |         1 |     0.899s |       1.9% |
-| Tolerance Infos                 |         1 |  0.000103s |         0% |
+| 3D FFTW                         |         1 |      7.73s |        29% |
+| Compute Ranges                  |         1 |   0.00546s |         0% |
+| Computing IndexSets             |         1 |     0.939s |       3.5% |
+| Deconvolution Before FFT        |         1 |      1.65s |       6.2% |
+| Deconvolution after FFT         |         1 |     0.384s |       1.4% |
+| Fast Gaussian Gridding on Inputs|         1 |      9.26s |        35% |
+| Fast Guassian Gridding on Output|         1 |      5.46s |        21% |
+| Input Gridding                  |         1 |        11s |        42% |
+| Output Gridding                 |         1 |      5.93s |        22% |
+| Shift Data for FFTW3D           |         1 |      0.88s |       3.3% |
+| Tolerance Infos                 |         1 |  8.58e-05s |         0% |
 +---------------------------------+-----------+------------+------------+
 
