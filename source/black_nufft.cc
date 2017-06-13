@@ -624,9 +624,41 @@ void BlackNUFFT::fast_gaussian_gridding_on_input()
   };
   auto f_dummy_copier_even = [](const unsigned int foo2) {};
 
-  WorkStream::run(0,grid_sets[1].size(),f_dummy_worker_even,f_dummy_copier_even,foo1,foo2);//,2*MultithreadInfo::n_threads(),8);
+  auto f_dummy_worker_even_tbb = [f_fgg_worker,f_fgg_copier,this](blocked_range<unsigned int> r)
+  {
+    for (unsigned int i=r.begin(); i<r.end(); ++i)
+      {
+        auto indy = grid_sets[1][i];
+        FGGScratch foo_scratch;
+        FGGCopy foo_copy;
+        WorkStream::run(indy.begin(), indy.end(),
+                        f_fgg_worker, f_fgg_copier, foo_scratch, foo_copy, 1, 1);
 
-  WorkStream::run(0,grid_sets[0].size(),f_dummy_worker_odd,f_dummy_copier_odd,foo1,foo2);//,2*MultithreadInfo::n_threads(),8);
+      }
+  };
+
+  auto f_dummy_worker_odd_tbb = [f_fgg_worker,f_fgg_copier,this](blocked_range<unsigned int> r)
+  {
+    for (unsigned int i=r.begin(); i<r.end(); ++i)
+      {
+        auto indy = grid_sets[0][i];
+        FGGScratch foo_scratch;
+        FGGCopy foo_copy;
+        WorkStream::run(indy.begin(), indy.end(),
+                        f_fgg_worker, f_fgg_copier, foo_scratch, foo_copy, 1, 1);
+
+      }
+  };
+
+
+  parallel_for(blocked_range<unsigned int> (0, grid_sets[1].size(),1), f_dummy_worker_even_tbb);
+
+  parallel_for(blocked_range<unsigned int> (0, grid_sets[0].size(),1), f_dummy_worker_odd_tbb);
+
+
+  // WorkStream::run(0,grid_sets[1].size(),f_dummy_worker_even,f_dummy_copier_even,foo1,foo2);//,2*MultithreadInfo::n_threads(),8);
+  //
+  // WorkStream::run(0,grid_sets[0].size(),f_dummy_worker_odd,f_dummy_copier_odd,foo1,foo2);//,2*MultithreadInfo::n_threads(),8);
 
 
   // The following is to have the classical WorkStream run on all the input set
