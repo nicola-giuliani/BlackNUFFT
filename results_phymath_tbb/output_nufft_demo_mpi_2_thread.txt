@@ -1,5 +1,5 @@
-2 0
 2 1
+2 0
 Using FGG as gridding tool and FFTW as backend FFT library
  Input work Balance : 726187 elements over 2097152
  Output work Balance : 1048576 elements over 2097152
@@ -7,20 +7,20 @@ FORWARD FFT
 
 
 +---------------------------------------------+------------+------------+
-| Total wallclock time elapsed since start    |      79.1s |            |
+| Total wallclock time elapsed since start    |        74s |            |
 |                                             |            |            |
 | Section                         | no. calls |  wall time | % of total |
 +---------------------------------+-----------+------------+------------+
-| 3D FFTW                         |         1 |      12.4s |        16% |
+| 3D FFTW                         |         1 |      12.4s |        17% |
 | Compute Ranges                  |         1 |    0.0125s |         0% |
-| Computing IndexSets             |         1 |      2.06s |       2.6% |
-| Deconvolution Before FFT        |         1 |      1.63s |       2.1% |
-| Deconvolution after FFT         |         1 |     0.134s |      0.17% |
-| Fast Gaussian Gridding on Inputs|         1 |      38.3s |        48% |
-| Fast Guassian Gridding on Output|         1 |      23.1s |        29% |
-| Input Gridding                  |         1 |        40s |        51% |
-| Output Gridding                 |         1 |      23.2s |        29% |
-| Shift Data for FFTW3D           |         1 |      1.52s |       1.9% |
-| Tolerance Infos                 |         1 |   8.8e-05s |         0% |
+| Computing IndexSets             |         1 |      2.01s |       2.7% |
+| Deconvolution Before FFT        |         1 |      1.69s |       2.3% |
+| Deconvolution after FFT         |         1 |     0.134s |      0.18% |
+| Fast Gaussian Gridding on Inputs|         1 |      35.4s |        48% |
+| Fast Guassian Gridding on Output|         1 |      20.8s |        28% |
+| Input Gridding                  |         1 |        37s |        50% |
+| Output Gridding                 |         1 |      20.9s |        28% |
+| Shift Data for FFTW3D           |         1 |      1.58s |       2.1% |
+| Tolerance Infos                 |         1 |  7.39e-05s |         0% |
 +---------------------------------+-----------+------------+------------+
 
