@@ -1,0 +1,268 @@
+The system is: Linux - 2.6.32-431.29.2.el6.x86_64 - x86_64
+Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+Compiler: /cm/shared/apps/openmpi/gcc/64/1.8.4/bin/mpicc 
+Build flags: 
+Id flags: 
+
+The output was:
+0
+
+
+Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.out"
+
+The C compiler identification is GNU, found in "/home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/2.8.12.2/CompilerIdC/a.out"
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+Compiler: /cm/shared/apps/openmpi/gcc/64/1.8.4/bin/mpicxx 
+Build flags: 
+Id flags: 
+
+The output was:
+0
+
+
+Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
+
+The CXX compiler identification is GNU, found in "/home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/2.8.12.2/CompilerIdCXX/a.out"
+
+Determining if the C compiler works passed with the following output:
+Change Dir: /home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/gmake "cmTryCompileExec3355038978/fast"
+/usr/bin/gmake -f CMakeFiles/cmTryCompileExec3355038978.dir/build.make CMakeFiles/cmTryCompileExec3355038978.dir/build
+gmake[1]: Entering directory `/home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec3355038978.dir/testCCompiler.c.o
+/cm/shared/apps/openmpi/gcc/64/1.8.4/bin/mpicc    -o CMakeFiles/cmTryCompileExec3355038978.dir/testCCompiler.c.o   -c /home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp/testCCompiler.c
+Linking C executable cmTryCompileExec3355038978
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec3355038978.dir/link.txt --verbose=1
+/cm/shared/apps/openmpi/gcc/64/1.8.4/bin/mpicc       CMakeFiles/cmTryCompileExec3355038978.dir/testCCompiler.c.o  -o cmTryCompileExec3355038978 -rdynamic 
+gmake[1]: Leaving directory `/home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp'
+
+
+Detecting C compiler ABI info compiled with the following output:
+Change Dir: /home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/gmake "cmTryCompileExec3825525752/fast"
+/usr/bin/gmake -f CMakeFiles/cmTryCompileExec3825525752.dir/build.make CMakeFiles/cmTryCompileExec3825525752.dir/build
+gmake[1]: Entering directory `/home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec3825525752.dir/CMakeCCompilerABI.c.o
+/cm/shared/apps/openmpi/gcc/64/1.8.4/bin/mpicc    -o CMakeFiles/cmTryCompileExec3825525752.dir/CMakeCCompilerABI.c.o   -c /usr/share/cmake/Modules/CMakeCCompilerABI.c
+Linking C executable cmTryCompileExec3825525752
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec3825525752.dir/link.txt --verbose=1
+/cm/shared/apps/openmpi/gcc/64/1.8.4/bin/mpicc     -v CMakeFiles/cmTryCompileExec3825525752.dir/CMakeCCompilerABI.c.o  -o cmTryCompileExec3825525752 -rdynamic  
+Using built-in specs.
+COLLECT_GCC=/cm/shared/apps/gcc/4.9.1/bin/gcc
+COLLECT_LTO_WRAPPER=/cm/shared/apps/gcc/4.9.1/libexec/gcc/x86_64-unknown-linux-gnu/4.9.1/lto-wrapper
+Target: x86_64-unknown-linux-gnu
+Configured with: /cm/shared/apps/src/objdir/../gcc-4.9.1/configure --prefix=/cm/shared/apps/gcc/4.9.1 --enable-languages=c,c++,fortran
+Thread model: posix
+gcc version 4.9.1 (GCC) 
+COMPILER_PATH=/cm/shared/apps/gcc/4.9.1/libexec/gcc/x86_64-unknown-linux-gnu/4.9.1/:/cm/shared/apps/gcc/4.9.1/libexec/gcc/x86_64-unknown-linux-gnu/4.9.1/:/cm/shared/apps/gcc/4.9.1/libexec/gcc/x86_64-unknown-linux-gnu/:/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/:/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/
+LIBRARY_PATH=/cm/shared/apps/slurm/14.03.0/lib64/../lib64/:/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/:/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/cm/shared/apps/slurm/14.03.0/lib64/slurm/:/cm/shared/apps/slurm/14.03.0/lib64/:/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../../:/lib/:/usr/lib/
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTryCompileExec3825525752' '-rdynamic' '-I' '/cm/shared/apps/openmpi/gcc/64/1.8.4/include' '-pthread' '-L/cm/shared/apps/openmpi/gcc/64/1.8.4/lib' '-mtune=generic' '-march=x86-64'
+ /cm/shared/apps/gcc/4.9.1/libexec/gcc/x86_64-unknown-linux-gnu/4.9.1/collect2 --eh-frame-hdr -m elf_x86_64 -export-dynamic -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTryCompileExec3825525752 /usr/lib/../lib64/crt1.o /usr/lib/../lib64/crti.o /cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/crtbegin.o -L/cm/shared/apps/openmpi/gcc/64/1.8.4/lib -L/cm/shared/apps/slurm/14.03.0/lib64/../lib64 -L/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1 -L/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/cm/shared/apps/slurm/14.03.0/lib64/slurm -L/cm/shared/apps/slurm/14.03.0/lib64 -L/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../.. CMakeFiles/cmTryCompileExec3825525752.dir/CMakeCCompilerABI.c.o -rpath /cm/shared/apps/openmpi/gcc/64/1.8.4/lib --enable-new-dtags -lmpi -lgcc --as-needed -lgcc_s --no-as-needed -lpthread -lc -lgcc --as-needed -lgcc_s --no-as-needed /cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/crtend.o /usr/lib/../lib64/crtn.o
+gmake[1]: Leaving directory `/home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp'
+
+
+Parsed C implicit link information from above output:
+  link line regex: [^( *|.*[/\])(ld|([^/\]+-)?ld|collect2)[^/\]*( |$)]
+  ignore line: [Change Dir: /home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp]
+  ignore line: []
+  ignore line: [Run Build Command:/usr/bin/gmake "cmTryCompileExec3825525752/fast"]
+  ignore line: [/usr/bin/gmake -f CMakeFiles/cmTryCompileExec3825525752.dir/build.make CMakeFiles/cmTryCompileExec3825525752.dir/build]
+  ignore line: [gmake[1]: Entering directory `/home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp']
+  ignore line: [/usr/bin/cmake -E cmake_progress_report /home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp/CMakeFiles 1]
+  ignore line: [Building C object CMakeFiles/cmTryCompileExec3825525752.dir/CMakeCCompilerABI.c.o]
+  ignore line: [/cm/shared/apps/openmpi/gcc/64/1.8.4/bin/mpicc    -o CMakeFiles/cmTryCompileExec3825525752.dir/CMakeCCompilerABI.c.o   -c /usr/share/cmake/Modules/CMakeCCompilerABI.c]
+  ignore line: [Linking C executable cmTryCompileExec3825525752]
+  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec3825525752.dir/link.txt --verbose=1]
+  ignore line: [/cm/shared/apps/openmpi/gcc/64/1.8.4/bin/mpicc     -v CMakeFiles/cmTryCompileExec3825525752.dir/CMakeCCompilerABI.c.o  -o cmTryCompileExec3825525752 -rdynamic  ]
+  ignore line: [Using built-in specs.]
+  ignore line: [COLLECT_GCC=/cm/shared/apps/gcc/4.9.1/bin/gcc]
+  ignore line: [COLLECT_LTO_WRAPPER=/cm/shared/apps/gcc/4.9.1/libexec/gcc/x86_64-unknown-linux-gnu/4.9.1/lto-wrapper]
+  ignore line: [Target: x86_64-unknown-linux-gnu]
+  ignore line: [Configured with: /cm/shared/apps/src/objdir/../gcc-4.9.1/configure --prefix=/cm/shared/apps/gcc/4.9.1 --enable-languages=c,c++,fortran]
+  ignore line: [Thread model: posix]
+  ignore line: [gcc version 4.9.1 (GCC) ]
+  ignore line: [COMPILER_PATH=/cm/shared/apps/gcc/4.9.1/libexec/gcc/x86_64-unknown-linux-gnu/4.9.1/:/cm/shared/apps/gcc/4.9.1/libexec/gcc/x86_64-unknown-linux-gnu/4.9.1/:/cm/shared/apps/gcc/4.9.1/libexec/gcc/x86_64-unknown-linux-gnu/:/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/:/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/]
+  ignore line: [LIBRARY_PATH=/cm/shared/apps/slurm/14.03.0/lib64/../lib64/:/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/:/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/cm/shared/apps/slurm/14.03.0/lib64/slurm/:/cm/shared/apps/slurm/14.03.0/lib64/:/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../../:/lib/:/usr/lib/]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTryCompileExec3825525752' '-rdynamic' '-I' '/cm/shared/apps/openmpi/gcc/64/1.8.4/include' '-pthread' '-L/cm/shared/apps/openmpi/gcc/64/1.8.4/lib' '-mtune=generic' '-march=x86-64']
+  link line: [ /cm/shared/apps/gcc/4.9.1/libexec/gcc/x86_64-unknown-linux-gnu/4.9.1/collect2 --eh-frame-hdr -m elf_x86_64 -export-dynamic -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTryCompileExec3825525752 /usr/lib/../lib64/crt1.o /usr/lib/../lib64/crti.o /cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/crtbegin.o -L/cm/shared/apps/openmpi/gcc/64/1.8.4/lib -L/cm/shared/apps/slurm/14.03.0/lib64/../lib64 -L/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1 -L/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/cm/shared/apps/slurm/14.03.0/lib64/slurm -L/cm/shared/apps/slurm/14.03.0/lib64 -L/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../.. CMakeFiles/cmTryCompileExec3825525752.dir/CMakeCCompilerABI.c.o -rpath /cm/shared/apps/openmpi/gcc/64/1.8.4/lib --enable-new-dtags -lmpi -lgcc --as-needed -lgcc_s --no-as-needed -lpthread -lc -lgcc --as-needed -lgcc_s --no-as-needed /cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/crtend.o /usr/lib/../lib64/crtn.o]
+    arg [/cm/shared/apps/gcc/4.9.1/libexec/gcc/x86_64-unknown-linux-gnu/4.9.1/collect2] ==> ignore
+    arg [--eh-frame-hdr] ==> ignore
+    arg [-m] ==> ignore
+    arg [elf_x86_64] ==> ignore
+    arg [-export-dynamic] ==> ignore
+    arg [-dynamic-linker] ==> ignore
+    arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
+    arg [-o] ==> ignore
+    arg [cmTryCompileExec3825525752] ==> ignore
+    arg [/usr/lib/../lib64/crt1.o] ==> ignore
+    arg [/usr/lib/../lib64/crti.o] ==> ignore
+    arg [/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/crtbegin.o] ==> ignore
+    arg [-L/cm/shared/apps/openmpi/gcc/64/1.8.4/lib] ==> dir [/cm/shared/apps/openmpi/gcc/64/1.8.4/lib]
+    arg [-L/cm/shared/apps/slurm/14.03.0/lib64/../lib64] ==> dir [/cm/shared/apps/slurm/14.03.0/lib64/../lib64]
+    arg [-L/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1] ==> dir [/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1]
+    arg [-L/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../../../lib64] ==> dir [/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../../../lib64]
+    arg [-L/lib/../lib64] ==> dir [/lib/../lib64]
+    arg [-L/usr/lib/../lib64] ==> dir [/usr/lib/../lib64]
+    arg [-L/cm/shared/apps/slurm/14.03.0/lib64/slurm] ==> dir [/cm/shared/apps/slurm/14.03.0/lib64/slurm]
+    arg [-L/cm/shared/apps/slurm/14.03.0/lib64] ==> dir [/cm/shared/apps/slurm/14.03.0/lib64]
+    arg [-L/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../..] ==> dir [/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../..]
+    arg [CMakeFiles/cmTryCompileExec3825525752.dir/CMakeCCompilerABI.c.o] ==> ignore
+    arg [-rpath] ==> ignore
+    arg [/cm/shared/apps/openmpi/gcc/64/1.8.4/lib] ==> ignore
+    arg [--enable-new-dtags] ==> ignore
+    arg [-lmpi] ==> lib [mpi]
+    arg [-lgcc] ==> lib [gcc]
+    arg [--as-needed] ==> ignore
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [--no-as-needed] ==> ignore
+    arg [-lpthread] ==> lib [pthread]
+    arg [-lc] ==> lib [c]
+    arg [-lgcc] ==> lib [gcc]
+    arg [--as-needed] ==> ignore
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [--no-as-needed] ==> ignore
+    arg [/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/crtend.o] ==> ignore
+    arg [/usr/lib/../lib64/crtn.o] ==> ignore
+  remove lib [gcc]
+  remove lib [gcc_s]
+  remove lib [gcc]
+  remove lib [gcc_s]
+  collapse library dir [/cm/shared/apps/openmpi/gcc/64/1.8.4/lib] ==> [/cm/shared/apps/openmpi/gcc/64/1.8.4/lib]
+  collapse library dir [/cm/shared/apps/slurm/14.03.0/lib64/../lib64] ==> [/cm/shared/apps/slurm/14.03.0/lib64]
+  collapse library dir [/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1] ==> [/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1]
+  collapse library dir [/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../../../lib64] ==> [/cm/shared/apps/gcc/4.9.1/lib64]
+  collapse library dir [/lib/../lib64] ==> [/lib64]
+  collapse library dir [/usr/lib/../lib64] ==> [/usr/lib64]
+  collapse library dir [/cm/shared/apps/slurm/14.03.0/lib64/slurm] ==> [/cm/shared/apps/slurm/14.03.0/lib64/slurm]
+  collapse library dir [/cm/shared/apps/slurm/14.03.0/lib64] ==> [/cm/shared/apps/slurm/14.03.0/lib64]
+  collapse library dir [/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../..] ==> [/cm/shared/apps/gcc/4.9.1/lib]
+  implicit libs: [mpi;pthread;c]
+  implicit dirs: [/cm/shared/apps/openmpi/gcc/64/1.8.4/lib;/cm/shared/apps/slurm/14.03.0/lib64;/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1;/cm/shared/apps/gcc/4.9.1/lib64;/lib64;/usr/lib64;/cm/shared/apps/slurm/14.03.0/lib64/slurm;/cm/shared/apps/gcc/4.9.1/lib]
+  implicit fwks: []
+
+
+Determining if the CXX compiler works passed with the following output:
+Change Dir: /home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/gmake "cmTryCompileExec3239589428/fast"
+/usr/bin/gmake -f CMakeFiles/cmTryCompileExec3239589428.dir/build.make CMakeFiles/cmTryCompileExec3239589428.dir/build
+gmake[1]: Entering directory `/home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building CXX object CMakeFiles/cmTryCompileExec3239589428.dir/testCXXCompiler.cxx.o
+/cm/shared/apps/openmpi/gcc/64/1.8.4/bin/mpicxx     -o CMakeFiles/cmTryCompileExec3239589428.dir/testCXXCompiler.cxx.o -c /home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp/testCXXCompiler.cxx
+Linking CXX executable cmTryCompileExec3239589428
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec3239589428.dir/link.txt --verbose=1
+/cm/shared/apps/openmpi/gcc/64/1.8.4/bin/mpicxx        CMakeFiles/cmTryCompileExec3239589428.dir/testCXXCompiler.cxx.o  -o cmTryCompileExec3239589428 -rdynamic 
+gmake[1]: Leaving directory `/home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp'
+
+
+Detecting CXX compiler ABI info compiled with the following output:
+Change Dir: /home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/gmake "cmTryCompileExec784271103/fast"
+/usr/bin/gmake -f CMakeFiles/cmTryCompileExec784271103.dir/build.make CMakeFiles/cmTryCompileExec784271103.dir/build
+gmake[1]: Entering directory `/home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building CXX object CMakeFiles/cmTryCompileExec784271103.dir/CMakeCXXCompilerABI.cpp.o
+/cm/shared/apps/openmpi/gcc/64/1.8.4/bin/mpicxx     -o CMakeFiles/cmTryCompileExec784271103.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp
+Linking CXX executable cmTryCompileExec784271103
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec784271103.dir/link.txt --verbose=1
+/cm/shared/apps/openmpi/gcc/64/1.8.4/bin/mpicxx      -v CMakeFiles/cmTryCompileExec784271103.dir/CMakeCXXCompilerABI.cpp.o  -o cmTryCompileExec784271103 -rdynamic  
+Using built-in specs.
+COLLECT_GCC=/cm/shared/apps/gcc/4.9.1/bin/g++
+COLLECT_LTO_WRAPPER=/cm/shared/apps/gcc/4.9.1/libexec/gcc/x86_64-unknown-linux-gnu/4.9.1/lto-wrapper
+Target: x86_64-unknown-linux-gnu
+Configured with: /cm/shared/apps/src/objdir/../gcc-4.9.1/configure --prefix=/cm/shared/apps/gcc/4.9.1 --enable-languages=c,c++,fortran
+Thread model: posix
+gcc version 4.9.1 (GCC) 
+COMPILER_PATH=/cm/shared/apps/gcc/4.9.1/libexec/gcc/x86_64-unknown-linux-gnu/4.9.1/:/cm/shared/apps/gcc/4.9.1/libexec/gcc/x86_64-unknown-linux-gnu/4.9.1/:/cm/shared/apps/gcc/4.9.1/libexec/gcc/x86_64-unknown-linux-gnu/:/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/:/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/
+LIBRARY_PATH=/cm/shared/apps/slurm/14.03.0/lib64/../lib64/:/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/:/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/cm/shared/apps/slurm/14.03.0/lib64/slurm/:/cm/shared/apps/slurm/14.03.0/lib64/:/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../../:/lib/:/usr/lib/
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTryCompileExec784271103' '-rdynamic' '-I' '/cm/shared/apps/openmpi/gcc/64/1.8.4/include' '-pthread' '-L/cm/shared/apps/openmpi/gcc/64/1.8.4/lib' '-shared-libgcc' '-mtune=generic' '-march=x86-64'
+ /cm/shared/apps/gcc/4.9.1/libexec/gcc/x86_64-unknown-linux-gnu/4.9.1/collect2 --eh-frame-hdr -m elf_x86_64 -export-dynamic -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTryCompileExec784271103 /usr/lib/../lib64/crt1.o /usr/lib/../lib64/crti.o /cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/crtbegin.o -L/cm/shared/apps/openmpi/gcc/64/1.8.4/lib -L/cm/shared/apps/slurm/14.03.0/lib64/../lib64 -L/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1 -L/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/cm/shared/apps/slurm/14.03.0/lib64/slurm -L/cm/shared/apps/slurm/14.03.0/lib64 -L/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../.. CMakeFiles/cmTryCompileExec784271103.dir/CMakeCXXCompilerABI.cpp.o -rpath /cm/shared/apps/openmpi/gcc/64/1.8.4/lib --enable-new-dtags -lmpi_cxx -lmpi -lstdc++ -lm -lgcc_s -lgcc -lpthread -lc -lgcc_s -lgcc /cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/crtend.o /usr/lib/../lib64/crtn.o
+gmake[1]: Leaving directory `/home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp'
+
+
+Parsed CXX implicit link information from above output:
+  link line regex: [^( *|.*[/\])(ld|([^/\]+-)?ld|collect2)[^/\]*( |$)]
+  ignore line: [Change Dir: /home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp]
+  ignore line: []
+  ignore line: [Run Build Command:/usr/bin/gmake "cmTryCompileExec784271103/fast"]
+  ignore line: [/usr/bin/gmake -f CMakeFiles/cmTryCompileExec784271103.dir/build.make CMakeFiles/cmTryCompileExec784271103.dir/build]
+  ignore line: [gmake[1]: Entering directory `/home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp']
+  ignore line: [/usr/bin/cmake -E cmake_progress_report /home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/CMakeTmp/CMakeFiles 1]
+  ignore line: [Building CXX object CMakeFiles/cmTryCompileExec784271103.dir/CMakeCXXCompilerABI.cpp.o]
+  ignore line: [/cm/shared/apps/openmpi/gcc/64/1.8.4/bin/mpicxx     -o CMakeFiles/cmTryCompileExec784271103.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
+  ignore line: [Linking CXX executable cmTryCompileExec784271103]
+  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec784271103.dir/link.txt --verbose=1]
+  ignore line: [/cm/shared/apps/openmpi/gcc/64/1.8.4/bin/mpicxx      -v CMakeFiles/cmTryCompileExec784271103.dir/CMakeCXXCompilerABI.cpp.o  -o cmTryCompileExec784271103 -rdynamic  ]
+  ignore line: [Using built-in specs.]
+  ignore line: [COLLECT_GCC=/cm/shared/apps/gcc/4.9.1/bin/g++]
+  ignore line: [COLLECT_LTO_WRAPPER=/cm/shared/apps/gcc/4.9.1/libexec/gcc/x86_64-unknown-linux-gnu/4.9.1/lto-wrapper]
+  ignore line: [Target: x86_64-unknown-linux-gnu]
+  ignore line: [Configured with: /cm/shared/apps/src/objdir/../gcc-4.9.1/configure --prefix=/cm/shared/apps/gcc/4.9.1 --enable-languages=c,c++,fortran]
+  ignore line: [Thread model: posix]
+  ignore line: [gcc version 4.9.1 (GCC) ]
+  ignore line: [COMPILER_PATH=/cm/shared/apps/gcc/4.9.1/libexec/gcc/x86_64-unknown-linux-gnu/4.9.1/:/cm/shared/apps/gcc/4.9.1/libexec/gcc/x86_64-unknown-linux-gnu/4.9.1/:/cm/shared/apps/gcc/4.9.1/libexec/gcc/x86_64-unknown-linux-gnu/:/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/:/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/]
+  ignore line: [LIBRARY_PATH=/cm/shared/apps/slurm/14.03.0/lib64/../lib64/:/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/:/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/cm/shared/apps/slurm/14.03.0/lib64/slurm/:/cm/shared/apps/slurm/14.03.0/lib64/:/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../../:/lib/:/usr/lib/]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTryCompileExec784271103' '-rdynamic' '-I' '/cm/shared/apps/openmpi/gcc/64/1.8.4/include' '-pthread' '-L/cm/shared/apps/openmpi/gcc/64/1.8.4/lib' '-shared-libgcc' '-mtune=generic' '-march=x86-64']
+  link line: [ /cm/shared/apps/gcc/4.9.1/libexec/gcc/x86_64-unknown-linux-gnu/4.9.1/collect2 --eh-frame-hdr -m elf_x86_64 -export-dynamic -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTryCompileExec784271103 /usr/lib/../lib64/crt1.o /usr/lib/../lib64/crti.o /cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/crtbegin.o -L/cm/shared/apps/openmpi/gcc/64/1.8.4/lib -L/cm/shared/apps/slurm/14.03.0/lib64/../lib64 -L/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1 -L/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/cm/shared/apps/slurm/14.03.0/lib64/slurm -L/cm/shared/apps/slurm/14.03.0/lib64 -L/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../.. CMakeFiles/cmTryCompileExec784271103.dir/CMakeCXXCompilerABI.cpp.o -rpath /cm/shared/apps/openmpi/gcc/64/1.8.4/lib --enable-new-dtags -lmpi_cxx -lmpi -lstdc++ -lm -lgcc_s -lgcc -lpthread -lc -lgcc_s -lgcc /cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/crtend.o /usr/lib/../lib64/crtn.o]
+    arg [/cm/shared/apps/gcc/4.9.1/libexec/gcc/x86_64-unknown-linux-gnu/4.9.1/collect2] ==> ignore
+    arg [--eh-frame-hdr] ==> ignore
+    arg [-m] ==> ignore
+    arg [elf_x86_64] ==> ignore
+    arg [-export-dynamic] ==> ignore
+    arg [-dynamic-linker] ==> ignore
+    arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
+    arg [-o] ==> ignore
+    arg [cmTryCompileExec784271103] ==> ignore
+    arg [/usr/lib/../lib64/crt1.o] ==> ignore
+    arg [/usr/lib/../lib64/crti.o] ==> ignore
+    arg [/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/crtbegin.o] ==> ignore
+    arg [-L/cm/shared/apps/openmpi/gcc/64/1.8.4/lib] ==> dir [/cm/shared/apps/openmpi/gcc/64/1.8.4/lib]
+    arg [-L/cm/shared/apps/slurm/14.03.0/lib64/../lib64] ==> dir [/cm/shared/apps/slurm/14.03.0/lib64/../lib64]
+    arg [-L/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1] ==> dir [/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1]
+    arg [-L/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../../../lib64] ==> dir [/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../../../lib64]
+    arg [-L/lib/../lib64] ==> dir [/lib/../lib64]
+    arg [-L/usr/lib/../lib64] ==> dir [/usr/lib/../lib64]
+    arg [-L/cm/shared/apps/slurm/14.03.0/lib64/slurm] ==> dir [/cm/shared/apps/slurm/14.03.0/lib64/slurm]
+    arg [-L/cm/shared/apps/slurm/14.03.0/lib64] ==> dir [/cm/shared/apps/slurm/14.03.0/lib64]
+    arg [-L/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../..] ==> dir [/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../..]
+    arg [CMakeFiles/cmTryCompileExec784271103.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+    arg [-rpath] ==> ignore
+    arg [/cm/shared/apps/openmpi/gcc/64/1.8.4/lib] ==> ignore
+    arg [--enable-new-dtags] ==> ignore
+    arg [-lmpi_cxx] ==> lib [mpi_cxx]
+    arg [-lmpi] ==> lib [mpi]
+    arg [-lstdc++] ==> lib [stdc++]
+    arg [-lm] ==> lib [m]
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [-lgcc] ==> lib [gcc]
+    arg [-lpthread] ==> lib [pthread]
+    arg [-lc] ==> lib [c]
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [-lgcc] ==> lib [gcc]
+    arg [/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/crtend.o] ==> ignore
+    arg [/usr/lib/../lib64/crtn.o] ==> ignore
+  remove lib [gcc_s]
+  remove lib [gcc]
+  remove lib [gcc_s]
+  remove lib [gcc]
+  collapse library dir [/cm/shared/apps/openmpi/gcc/64/1.8.4/lib] ==> [/cm/shared/apps/openmpi/gcc/64/1.8.4/lib]
+  collapse library dir [/cm/shared/apps/slurm/14.03.0/lib64/../lib64] ==> [/cm/shared/apps/slurm/14.03.0/lib64]
+  collapse library dir [/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1] ==> [/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1]
+  collapse library dir [/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../../../lib64] ==> [/cm/shared/apps/gcc/4.9.1/lib64]
+  collapse library dir [/lib/../lib64] ==> [/lib64]
+  collapse library dir [/usr/lib/../lib64] ==> [/usr/lib64]
+  collapse library dir [/cm/shared/apps/slurm/14.03.0/lib64/slurm] ==> [/cm/shared/apps/slurm/14.03.0/lib64/slurm]
+  collapse library dir [/cm/shared/apps/slurm/14.03.0/lib64] ==> [/cm/shared/apps/slurm/14.03.0/lib64]
+  collapse library dir [/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1/../../..] ==> [/cm/shared/apps/gcc/4.9.1/lib]
+  implicit libs: [mpi_cxx;mpi;stdc++;m;pthread;c]
+  implicit dirs: [/cm/shared/apps/openmpi/gcc/64/1.8.4/lib;/cm/shared/apps/slurm/14.03.0/lib64;/cm/shared/apps/gcc/4.9.1/lib/gcc/x86_64-unknown-linux-gnu/4.9.1;/cm/shared/apps/gcc/4.9.1/lib64;/lib64;/usr/lib64;/cm/shared/apps/slurm/14.03.0/lib64/slurm;/cm/shared/apps/gcc/4.9.1/lib]
+  implicit fwks: []
+
+
