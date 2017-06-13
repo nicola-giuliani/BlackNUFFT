@@ -6,20 +6,20 @@ FORWARD FFT
 
 
 +---------------------------------------------+------------+------------+
-| Total wallclock time elapsed since start    |      61.4s |            |
+| Total wallclock time elapsed since start    |        50s |            |
 |                                             |            |            |
 | Section                         | no. calls |  wall time | % of total |
 +---------------------------------+-----------+------------+------------+
-| 3D FFTW                         |         1 |      16.5s |        27% |
+| 3D FFTW                         |         1 |      16.5s |        33% |
 | Compute Ranges                  |         1 |    0.0123s |         0% |
-| Computing IndexSets             |         1 |      2.18s |       3.5% |
-| Deconvolution Before FFT        |         1 |     0.885s |       1.4% |
-| Deconvolution after FFT         |         1 |    0.0594s |         0% |
-| Fast Gaussian Gridding on Inputs|         1 |      28.4s |        46% |
-| Fast Guassian Gridding on Output|         1 |      12.7s |        21% |
-| Input Gridding                  |         1 |      29.3s |        48% |
-| Output Gridding                 |         1 |      12.8s |        21% |
-| Shift Data for FFTW3D           |         1 |     0.685s |       1.1% |
-| Tolerance Infos                 |         1 |  6.82e-05s |         0% |
+| Computing IndexSets             |         1 |      2.18s |       4.4% |
+| Deconvolution Before FFT        |         1 |     0.873s |       1.7% |
+| Deconvolution after FFT         |         1 |    0.0595s |      0.12% |
+| Fast Gaussian Gridding on Inputs|         1 |      18.7s |        37% |
+| Fast Guassian Gridding on Output|         1 |        11s |        22% |
+| Input Gridding                  |         1 |      19.6s |        39% |
+| Output Gridding                 |         1 |        11s |        22% |
+| Shift Data for FFTW3D           |         1 |     0.711s |       1.4% |
+| Tolerance Infos                 |         1 |  6.79e-05s |         0% |
 +---------------------------------+-----------+------------+------------+
 
