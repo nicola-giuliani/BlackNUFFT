@@ -604,6 +604,119 @@ void BlackNUFFT::fast_gaussian_gridding_on_input()
 
   };
 
+  auto f_fgg_tbb = [this, t1, t2, t3] (IndexSet::ElementIterator j_it)
+  {
+    types::global_dof_index j = *j_it;
+    Vector<double> xc(2*nspread), yc(2*nspread), zc(2*nspread);
+    Vector<double> local_fine_grid_data(2*2*nspread*2*nspread*2*nspread);
+
+    types::global_dof_index jb1 = types::global_dof_index(double(nf1/2) + (input_grid[0][j]-xb[0])/hx);
+    types::global_dof_index jb2 = types::global_dof_index(double(nf2/2) + (input_grid[1][j]-xb[1])/hy);
+    types::global_dof_index jb3 = types::global_dof_index(double(nf3/2) + (input_grid[2][j]-xb[2])/hz);
+    double diff1 = double(nf1/2) + (input_grid[0][j]-xb[0])/hx - jb1;
+    double diff2 = double(nf2/2) + (input_grid[1][j]-xb[1])/hy - jb2;
+    double diff3 = double(nf3/2) + (input_grid[2][j]-xb[2])/hz - jb3;
+    double ang = sb[0]*input_grid[0][j] + sb[1]*input_grid[1][j] + sb[2]*input_grid[2][j];
+    std::complex<double> dummy1(std::cos(ang), std::sin(ang));
+    std::complex<double> dummy2(input_vector[2*j], input_vector[2*j+1]);
+    std::complex<double> cs = dummy1 * dummy2;
+    // 2) We precompute everything along x. Fast Gaussian Gridding
+    // 2a) Precomptaiton in x
+    // The original loop was -nspread+1 : nspread
+    xc[nspread-1] = std::exp(-t1*diff1*diff1
+                             -t2*diff2*diff2
+                             -t3*diff3*diff3);
+
+    double cross = xc[nspread-1];
+    double cross1 = exp(2.*t1 * diff1);
+    for (unsigned int k1 = 0; k1 < nspread; ++k1)
+      {
+        cross = cross * cross1;
+        xc[nspread+k1] = xexp[k1]*cross;
+      }
+    cross = xc[nspread-1];
+    cross1 = 1./cross1;
+    for (unsigned int k1 = 0; k1 < nspread-1; ++k1) // Precomputing everything Watch out for negative indices.
+      {
+        cross = cross * cross1;
+        xc[nspread-k1-2] = xexp[k1]*cross;
+      }
+    // 2b) Precomptaiton in y
+    yc[nspread-1] = 1.;
+    cross = std::exp(2.*t2 * diff2);
+    cross1 = cross;
+    for (unsigned int k2 = 0; k2 < nspread-1; ++k2) //k2 = 1, nspread-1
+      {
+        yc[nspread + k2] = yexp[k2]*cross;
+        yc[nspread-2-k2] = yexp[k2]/cross;
+        cross = cross * cross1;
+      }
+    yc[2*nspread-1] = yexp[nspread-1]*cross;
+    // 2c) Precomptaiton in z
+    zc[nspread-1] = 1.;
+    cross = std::exp(2.*t3 * diff3);
+    cross1 = cross;
+    for (unsigned int k3 = 0; k3 < nspread-1; ++k3)
+      {
+        zc[nspread + k3] = zexp[k3]*cross;
+        zc[nspread-2-k3] = zexp[k3]/cross;
+        cross = cross * cross1;
+      }
+    zc[2*nspread-1] = zexp[nspread-1]*cross;
+    // 2d) We put everything together locally
+    for (unsigned int k3 = 0; k3<2*nspread; ++k3)
+      {
+        std::complex<double> c2;
+        c2 = zc[k3] * cs;
+        for (unsigned int k2 = 0; k2<2*nspread; ++k2)
+          {
+            std::complex<double> cc;
+            cc = yc[k2] * c2;
+            types::global_dof_index ii = jb1 + (jb2+k2-(nspread-1))*nf1 + (jb3+k3-(nspread-1))*nf1*nf2;
+            for (unsigned int k1 = 0; k1<2*nspread; ++k1)
+              {
+                types::global_dof_index istart = 2*(ii+((int)k1 - (int)(nspread-1)));
+                std::complex<double> zz;
+                zz = xc[k1] * cc;
+                unsigned int local_index = 2*(k3*(2*nspread*2*nspread)+k2*(2*nspread)+k1);
+                local_fine_grid_data[local_index] += zz.real();
+                local_fine_grid_data[local_index+1] += zz.imag();
+                }
+          }
+      }
+
+      if (fftw3_set.is_element(2 * (jb1 + jb2*nf1 + jb3*nf1*nf2)))
+        {
+
+
+          for (unsigned int k3 = 0; k3<2*nspread; ++k3)
+            {
+
+              unsigned int local_index = 2*(k3*(2*nspread*2*nspread));
+              for (unsigned int k2 = 0; k2<2*nspread; ++k2)
+                {
+                  types::global_dof_index ii = jb1 + (jb2+k2-(nspread-1))*nf1 + (jb3+k3-(nspread-1))*nf1*nf2;
+
+                  for (unsigned int k1 = 0; k1<2*nspread; ++k1)
+                    {
+                      types::global_dof_index istart = 2*(ii+((int)k1 - (int)(nspread-1)));
+                      fine_grid_data[istart] += local_fine_grid_data[local_index];
+                      fine_grid_data[istart+1] += local_fine_grid_data[local_index+1];
+                      local_index += 2;
+                    }
+                }
+
+            }
+        }
+
+
+
+
+
+  };
+
+
+
   unsigned int foo1,foo2;
   auto f_dummy_worker_odd = [f_fgg_worker,f_fgg_copier,this](types::global_dof_index first_it, unsigned int foo1, unsigned int foo2)
   {
@@ -624,28 +737,33 @@ void BlackNUFFT::fast_gaussian_gridding_on_input()
   };
   auto f_dummy_copier_even = [](const unsigned int foo2) {};
 
-  auto f_dummy_worker_even_tbb = [f_fgg_worker,f_fgg_copier,this](blocked_range<unsigned int> r)
+  auto f_dummy_worker_even_tbb = [f_fgg_worker,f_fgg_copier,f_fgg_tbb,this](blocked_range<unsigned int> r)
   {
     for (unsigned int i=r.begin(); i<r.end(); ++i)
       {
         auto indy = grid_sets[1][i];
-        FGGScratch foo_scratch;
-        FGGCopy foo_copy;
-        WorkStream::run(indy.begin(), indy.end(),
-                        f_fgg_worker, f_fgg_copier, foo_scratch, foo_copy, 1, 1);
+        // FGGScratch foo_scratch;
+        // FGGCopy foo_copy;
+        // WorkStream::run(indy.begin(), indy.end(),
+        //                 f_fgg_worker, f_fgg_copier, foo_scratch, foo_copy, 1, 1);
+        for(auto j_it = indy.begin(); j_it!=indy.end(); ++j_it)
+          f_fgg_tbb(j_it);
 
       }
   };
 
-  auto f_dummy_worker_odd_tbb = [f_fgg_worker,f_fgg_copier,this](blocked_range<unsigned int> r)
+  auto f_dummy_worker_odd_tbb = [f_fgg_worker,f_fgg_copier,f_fgg_tbb,this](blocked_range<unsigned int> r)
   {
     for (unsigned int i=r.begin(); i<r.end(); ++i)
       {
         auto indy = grid_sets[0][i];
-        FGGScratch foo_scratch;
-        FGGCopy foo_copy;
-        WorkStream::run(indy.begin(), indy.end(),
-                        f_fgg_worker, f_fgg_copier, foo_scratch, foo_copy, 1, 1);
+        // FGGScratch foo_scratch;
+        // FGGCopy foo_copy;
+        // WorkStream::run(indy.begin(), indy.end(),
+        //                 f_fgg_worker, f_fgg_copier, foo_scratch, foo_copy, 1, 1);
+        for(auto j_it = indy.begin(); j_it!=indy.end(); ++j_it)
+           f_fgg_tbb(j_it);
+
 
       }
   };
