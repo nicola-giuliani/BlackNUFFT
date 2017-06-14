@@ -43,57 +43,57 @@ void create_initial_data(types::global_dof_index &nj, types::global_dof_index &n
 void test()
 {
 
-    types::global_dof_index nj=64, nk=64;
-    double grid_limit=1.;
-    double epsilon=1e-2;
-    bool iflag=false;
-    std::vector<Vector<double> > in_grid(3);
-    Vector<double> in_vec;
+  types::global_dof_index nj=64, nk=64;
+  double grid_limit=1.;
+  double epsilon=1e-2;
+  bool iflag=false;
+  std::vector<Vector<double> > in_grid(3);
+  Vector<double> in_vec;
 
-    std::vector<Vector<double> > out_grid(3);
-    Vector<double> out_vec;
+  std::vector<Vector<double> > out_grid(3);
+  Vector<double> out_vec;
 
-    in_vec.reinit(2*nj);
-    in_grid[0].reinit(nj);
-    in_grid[1].reinit(nj);
-    in_grid[2].reinit(nj);
-    out_vec.reinit(2*nk);
-    out_grid[0].reinit(nk);
-    out_grid[1].reinit(nk);
-    out_grid[2].reinit(nk);
+  in_vec.reinit(2*nj);
+  in_grid[0].reinit(nj);
+  in_grid[1].reinit(nj);
+  in_grid[2].reinit(nj);
+  out_vec.reinit(2*nk);
+  out_grid[0].reinit(nk);
+  out_grid[1].reinit(nk);
+  out_grid[2].reinit(nk);
 
-    create_initial_data(nj,nk,in_grid,in_vec,out_grid,grid_limit);
+  create_initial_data(nj,nk,in_grid,in_vec,out_grid,grid_limit);
 
-    std::vector<double> in_vec_ptr(in_vec.size()),out_vec_ptr(out_vec.size());
-    for (auto j : in_vec.locally_owned_elements())
-      in_vec_ptr[j]=in_vec[j];
-    for (auto j : out_vec.locally_owned_elements())
-      out_vec_ptr[j]=out_vec[j];
-    std::vector<std::vector<double> > in_grid_ptr(3, std::vector<double> (in_grid[0].size())), out_grid_ptr(3, std::vector<double> (in_grid[0].size()));
-    for (unsigned int i =0; i<3; ++i)
-      {
-        for (auto j : in_grid[i].locally_owned_elements())
-          in_grid_ptr[i][j]=in_grid[i][j];
-        for (auto j : in_grid[i].locally_owned_elements())
-          out_grid_ptr[i][j]=out_grid[i][j];
-      }
+  std::vector<double> in_vec_ptr(in_vec.size()),out_vec_ptr(out_vec.size());
+  for (auto j : in_vec.locally_owned_elements())
+    in_vec_ptr[j]=in_vec[j];
+  for (auto j : out_vec.locally_owned_elements())
+    out_vec_ptr[j]=out_vec[j];
+  std::vector<std::vector<double> > in_grid_ptr(3, std::vector<double> (in_grid[0].size())), out_grid_ptr(3, std::vector<double> (in_grid[0].size()));
+  for (unsigned int i =0; i<3; ++i)
+    {
+      for (auto j : in_grid[i].locally_owned_elements())
+        in_grid_ptr[i][j]=in_grid[i][j];
+      for (auto j : in_grid[i].locally_owned_elements())
+        out_grid_ptr[i][j]=out_grid[i][j];
+    }
 
-    BlackNUFFT my_nufft(in_grid_ptr, in_vec_ptr, out_grid_ptr, out_vec_ptr);
-    my_nufft.init_nufft(epsilon, iflag);
-    my_nufft.compute_ranges();
-    my_nufft.compute_tolerance_infos();
-    my_nufft.create_index_sets();
-    my_nufft.input_gridding();
+  BlackNUFFT my_nufft(in_grid_ptr, in_vec_ptr, out_grid_ptr, out_vec_ptr);
+  my_nufft.init_nufft(epsilon, iflag);
+  my_nufft.compute_ranges();
+  my_nufft.compute_tolerance_infos();
+  my_nufft.create_index_sets();
+  my_nufft.input_gridding();
 
-    for(auto i : my_nufft.fine_grid_data.locally_owned_elements())
-      my_nufft.fine_grid_data[i]=1.;
+  for (auto i : my_nufft.fine_grid_data.locally_owned_elements())
+    my_nufft.fine_grid_data[i]=1.;
 
-    my_nufft.fine_grid_data.locally_owned_elements().print(std::cout);
-    my_nufft.output_gridding();
-    for(types::global_dof_index i =0; i<2*nk; ++i)
-      std::cout<<out_vec_ptr[i]<<" ";
-    std::cout<<std::endl;
-    my_nufft.computing_timer.disable_output();
+  my_nufft.fine_grid_data.locally_owned_elements().print(std::cout);
+  my_nufft.output_gridding();
+  for (types::global_dof_index i =0; i<2*nk; ++i)
+    std::cout<<out_vec_ptr[i]<<" ";
+  std::cout<<std::endl;
+  my_nufft.computing_timer.disable_output();
 
 
 }

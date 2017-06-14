@@ -247,84 +247,84 @@ void BlackNUFFT::compute_tolerance_infos()
   //It is the oversampling RATio. Mr/M = (fine grid point with oversampling) / (fine grid point)
   // the more accuracy you require the more you have to oversample.
 
-  if(gridding == "FGG")
-  {
-  if (epsilon <= 1e-12)
-    rat = 3.;
-  else if (epsilon <= 1e-11)
-    rat = std::sqrt(3.3);
-  else
-    rat = std::sqrt(2.2);
-
-  // int(-log(eps)/(pi*(rat-1d0)/(rat-.5d0)) + .5d0)
-  nspread = int(-std::log(epsilon)/(numbers::PI*(rat-1.)/(rat-.5)) + .5);
-
-  // Grid span parameters
-  double t1 = 2. * xm[0] * sm[0] / numbers::PI;
-  double t2 = 2. * xm[1] * sm[1] / numbers::PI;
-  double t3 = 2. * xm[2] * sm[2] / numbers::PI;
-
-  // pcout<<rat<<" "<<xm[2]<<" "<<sm[2]<<std::endl;
-
-  // Oversampled grid sizes.
-  nf1 = (types::global_dof_index)next235(rat*std::max(rat*t1+2*nspread,2*nspread/(rat-1)));
-  nf2 = (types::global_dof_index)next235(rat*std::max(rat*t2+2*nspread,2*nspread/(rat-1)));
-  nf3 = (types::global_dof_index)next235(rat*std::max(rat*t3+2*nspread,2*nspread/(rat-1)));
-
-
-  // Oversampling parameters in the 3 directions.
-  rat1 = (std::sqrt(nf1*t1+nspread*nspread)-nspread)/t1;
-  rat2 = (std::sqrt(nf2*t2+nspread*nspread)-nspread)/t2;
-  rat3 = (std::sqrt(nf3*t3+nspread*nspread)-nspread)/t3;
-
-
-  r2lamb1 = rat1 * rat1 * nspread / (rat1*(rat1-0.5));
-  r2lamb2 = rat2 * rat2 * nspread / (rat2*(rat2-0.5));
-  r2lamb3 = rat3 * rat3 * nspread / (rat3*(rat3-0.5));
-
-
-  hx = numbers::PI/(rat1*sm[0]);
-  hs = double(2)*numbers::PI/double(nf1)/hx;
-  hy = numbers::PI/(rat2*sm[1]);
-  ht = double(2)*numbers::PI/double(nf2)/hy;
-  hz = numbers::PI/(rat3*sm[2]);
-  // pcout<<xm[2]<<std::endl;
-  hu = double(2)*numbers::PI/double(nf3)/hz;
-
-  iw7 = (types::global_dof_index)(nf1*(r2lamb1-nspread)/r2lamb1+.1);
-  iw8 = (types::global_dof_index)(nf2*(r2lamb2-nspread)/r2lamb2+.1);
-  iw9 = (types::global_dof_index)(nf3*(r2lamb3-nspread)/r2lamb3+.1);
-
-  // pcout<<epsilon<<" "<<nspread<<" "<<nf1<<" "<<nf2<<" "<<nf3<<std::endl;
-  // pcout<<iw7<<" "<<iw8<<" "<<iw9<<" "<<std::endl;
-
-
-  double t4 = numbers::PI * r2lamb1 / double(nf1*nf1);
-  double cross1 = (1. - 2. * (nf1/2 % 2)) / r2lamb1;
-  deconv_array_x.reinit(iw7+1);
-  for ( types::global_dof_index k1 = 0; k1 <= iw7; ++k1)
+  if (gridding == "FGG")
     {
-      deconv_array_x[k1] = cross1*std::exp(t4*double(k1*k1));
-      cross1 = -cross1;
-    }
-  double t5 = numbers::PI * r2lamb2 / double(nf2*nf2);
-  cross1 = 1./r2lamb2;
-  deconv_array_y.reinit(iw8+1);
-  for ( types::global_dof_index k1 = 0; k1 <= iw8; ++k1)
-    {
-      deconv_array_y[k1] = cross1*std::exp(t5*double(k1*k1));
-      cross1 = -cross1;
-    }
-  double t6 = numbers::PI * r2lamb3 / double(nf3*nf3);
-  cross1 = 1./r2lamb3;
-  deconv_array_z.reinit(iw9+1);
-  for ( types::global_dof_index k1 = 0; k1 <= iw9; ++k1)
-    {
-      deconv_array_z[k1] = cross1*std::exp(t6*k1*k1);
-      cross1 = -cross1;
-    }
+      if (epsilon <= 1e-12)
+        rat = 3.;
+      else if (epsilon <= 1e-11)
+        rat = std::sqrt(3.3);
+      else
+        rat = std::sqrt(2.2);
 
-  }
+      // int(-log(eps)/(pi*(rat-1d0)/(rat-.5d0)) + .5d0)
+      nspread = int(-std::log(epsilon)/(numbers::PI*(rat-1.)/(rat-.5)) + .5);
+
+      // Grid span parameters
+      double t1 = 2. * xm[0] * sm[0] / numbers::PI;
+      double t2 = 2. * xm[1] * sm[1] / numbers::PI;
+      double t3 = 2. * xm[2] * sm[2] / numbers::PI;
+
+      // pcout<<rat<<" "<<xm[2]<<" "<<sm[2]<<std::endl;
+
+      // Oversampled grid sizes.
+      nf1 = (types::global_dof_index)next235(rat*std::max(rat*t1+2*nspread,2*nspread/(rat-1)));
+      nf2 = (types::global_dof_index)next235(rat*std::max(rat*t2+2*nspread,2*nspread/(rat-1)));
+      nf3 = (types::global_dof_index)next235(rat*std::max(rat*t3+2*nspread,2*nspread/(rat-1)));
+
+
+      // Oversampling parameters in the 3 directions.
+      rat1 = (std::sqrt(nf1*t1+nspread*nspread)-nspread)/t1;
+      rat2 = (std::sqrt(nf2*t2+nspread*nspread)-nspread)/t2;
+      rat3 = (std::sqrt(nf3*t3+nspread*nspread)-nspread)/t3;
+
+
+      r2lamb1 = rat1 * rat1 * nspread / (rat1*(rat1-0.5));
+      r2lamb2 = rat2 * rat2 * nspread / (rat2*(rat2-0.5));
+      r2lamb3 = rat3 * rat3 * nspread / (rat3*(rat3-0.5));
+
+
+      hx = numbers::PI/(rat1*sm[0]);
+      hs = double(2)*numbers::PI/double(nf1)/hx;
+      hy = numbers::PI/(rat2*sm[1]);
+      ht = double(2)*numbers::PI/double(nf2)/hy;
+      hz = numbers::PI/(rat3*sm[2]);
+      // pcout<<xm[2]<<std::endl;
+      hu = double(2)*numbers::PI/double(nf3)/hz;
+
+      iw7 = (types::global_dof_index)(nf1*(r2lamb1-nspread)/r2lamb1+.1);
+      iw8 = (types::global_dof_index)(nf2*(r2lamb2-nspread)/r2lamb2+.1);
+      iw9 = (types::global_dof_index)(nf3*(r2lamb3-nspread)/r2lamb3+.1);
+
+      // pcout<<epsilon<<" "<<nspread<<" "<<nf1<<" "<<nf2<<" "<<nf3<<std::endl;
+      // pcout<<iw7<<" "<<iw8<<" "<<iw9<<" "<<std::endl;
+
+
+      double t4 = numbers::PI * r2lamb1 / double(nf1*nf1);
+      double cross1 = (1. - 2. * (nf1/2 % 2)) / r2lamb1;
+      deconv_array_x.reinit(iw7+1);
+      for ( types::global_dof_index k1 = 0; k1 <= iw7; ++k1)
+        {
+          deconv_array_x[k1] = cross1*std::exp(t4*double(k1*k1));
+          cross1 = -cross1;
+        }
+      double t5 = numbers::PI * r2lamb2 / double(nf2*nf2);
+      cross1 = 1./r2lamb2;
+      deconv_array_y.reinit(iw8+1);
+      for ( types::global_dof_index k1 = 0; k1 <= iw8; ++k1)
+        {
+          deconv_array_y[k1] = cross1*std::exp(t5*double(k1*k1));
+          cross1 = -cross1;
+        }
+      double t6 = numbers::PI * r2lamb3 / double(nf3*nf3);
+      cross1 = 1./r2lamb3;
+      deconv_array_z.reinit(iw9+1);
+      for ( types::global_dof_index k1 = 0; k1 <= iw9; ++k1)
+        {
+          deconv_array_z[k1] = cross1*std::exp(t6*k1*k1);
+          cross1 = -cross1;
+        }
+
+    }
   else
     AssertThrow(true, ExcNotImplemented());
 
