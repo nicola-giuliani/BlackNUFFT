@@ -15,4 +15,4 @@ RUN wget http://www.fftw.org/fftw-3.3.6-pl2.tar.gz &&\
     rm -rf fftw-3.3.6-pl2
 ENV FFTW_DIR $HOME/libs/fftw-3.3.6-pl2
 
-USER dealii
+#USER dealii
