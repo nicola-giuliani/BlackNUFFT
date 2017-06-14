@@ -1,23 +1,58 @@
-# NUFFT
+# BlackNUFFT
 
-This repository contains two different libraries for the computation of the Non Uniform Fast Fourier Transform. The algorithm has been developed by Professor Leslie Greengard and it is available, under GPL license, here http://www.cims.nyu.edu/cmcl/nufft/nufft.html.
-The directory libGreengard contains the original FORTRAN 77 algorithm very optimised on a single core. The directory libNUFFT contains instead its translation in C++ via the usage of the deal.ii library, available under LGPL license here https://www.dealii.org/. Our goal is to parallelise the C++ implementation through a multicore-multiprocessor paradigm using both Intel Threading Building Block and MPI.
+This repository contains a library for the computation of the Non Uniform Fast Fourier Transform. As reference algorithm we consider the outstanding work by Greengard and Lee which is freely available, under GPL license, here http://www.cims.nyu.edu/cmcl/nufft/nufft.html.
+We present a flexible and modular implementation of NUFFT of type 3 in 3D in C++. We make use of existing High Performance Computing libraries as the deal.ii library, available under LGPL license here https://www.dealii.org/. Our goal is to parallelise the C++ implementation through a multicore-multiprocessor paradigm using both Intel Threading Building Block and MPI. The modularity we have prescribed allows for extensibility of every part of the algorithm.
 
 ## BlackNUFFT Breakdown
 
-We have divided the [original code](http://www.cims.nyu.edu/cmcl/software.html) by Leslie Greengard into the main steps. This new modularity allows for user-driven customisations since every of these functions can be easily replaced. 
+The NUFFT algorithm can be divided in five main steps
 
-- compute_ranges(): it computes the bounding box for the array of points given as input. In this way we can perform all the later steps inside the usual box around the origin.
-- compute_tolerance_infos(): given the tolerance required for the computation we use Greengard's algorithm to compute the span of the finer grid and the oversampling parameters.
-- create_index_set(): this function is the core of our MPI parallelisation. We need 4 different sets. 
-	- fftw3_set: the automatic subdivision that fftw3_mpi builds up. It is a 1d subdivision up to now.	 
-	- input_set: we use it to divide the input vector. We follow the subdivision given by fftw3_mpi 
-	- fftw3_ghost: the ghost cell we need, we need a layer of n_spread cells if n_spread is the span of the convolution kernel.
-	- output_set: a set that divides the output points following the same philosophy of input_set.
-- fast_gaussian_gridding_on_input(): we compute the first gaussian gridding from the input array to the finer grid. Basically this is a convolution through a Gaussian kernel. We apply a mixed TBB-MPI parallelisation. We divided the input nodes following the 1d domain decomposition FFTW automatically provides. Then we perform it following the Fast Algorithm developed by Greengard. This is not a pointless operation and we have used WorkStream to deal with it. 
-- deconvolution_before_fft(): a deconvolution for the second grinding we will perform on the output. This is a pointwise operation, thus we simply use TaskGroup to parallelise it in a multicore environment. We need to perform the deconvolution only on the owned elements of the fine array. This is done with the fftw3_set we have generated.
-- compute_stubborn_fft(): this is a 3d pruned FFT performed using 1d FFTW complex operations. It automatically deals with the data shift. No TBB No MPI.
-- compute_fft_3d(): a wrapper to execute the 3d FFT on the fine grid assembled. This function does not deal the data shift.
-- shift_data_for_fftw3d(): this function needs to be called after the 3d computation. In this way we are shifting the data through a local operation.
-- fast_gaussian_gridding_on_output(): same as for the input but this time we need to pass from the fine grid to the output array. We divide the output array in the same way of the input array.
-- deconvolution_after_fft(): we deconvolve the first gaussian gridding and we use the ranges computed before to translate our data back to their original box. Finally we perform a reduction to assemble the entire output vector and we conclude the program.
+- set up of the NUFFT
+	- index set creation for the MPI and TBB parallelisations
+	- setting of the tolerance and computation of the spreading constants for the gridding
+	
+- gridding from input array to the fine grid array, as preliminary gridding we present a hybridly parallel implementation of the Fast Guassian Gridding bt Greengard and Lee
+	- FGG
+	- scaling of the resulting array
+-  FFT on the the distributed fine grid array
+	- call of a 3D parallel existing FFT
+	- circular shift of the results
+
+- gridding from the fine grid array to the output array, as preliminary gridding we present a hybridly parallel implementation of the Fast Guassian Gridding bt Greengard and Lee
+	- FGG
+	- scaling of the resulting array
+
+
+
+## Install Procedure
+
+
+To install BlackNUFFT from scratch it is sufficient to install the FFTW library (if the user want to change the FFT backend library it is sufficient to change the CMakeLists.txt)
+
+	wget http://www.fftw.org/fftw-3.3.6-pl2.tar.gz &&\
+    tar xf fftw-3.3.6-pl2.tar.gz && rm -f fftw-3.3.6-pl2.tar.gz && \
+    cd fftw-3.3.6-pl2 && \
+    ./configure --enable-mpi --prefix=/your_installation_pwd/ --enable-shared && \
+    make install && \
+    
+Then it is mandatory to install the deal.ii library enabling the MPI framework.
+
+	git clone https://github.com/dealii/dealii.git
+	cd dealii
+	mkdir build
+	cd build
+	cmake ../ -DDEAL_II_WITH_MPI=ON -DCMAKE_INSTALL_PREFIX=/your_installation_pwd/
+	make install
+	
+Finally
+
+	git clone https://github.com/nicola-giuliani/BlackNUFFT.git
+	cd BlackNUFFT
+	mkdir build
+	cd build
+	export -DFFTW_DIR=/path_to_fftw_install_dir/
+	cmake ../ 
+	make 
+	
+at this point in the build directory you have both the shared library of BlackNUFFT and an executable ready to use
+
