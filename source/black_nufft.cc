@@ -681,33 +681,33 @@ void BlackNUFFT::fast_gaussian_gridding_on_input()
                 unsigned int local_index = 2*(k3*(2*nspread*2*nspread)+k2*(2*nspread)+k1);
                 local_fine_grid_data[local_index] += zz.real();
                 local_fine_grid_data[local_index+1] += zz.imag();
-                }
+              }
           }
       }
 
-      if (fftw3_set.is_element(2 * (jb1 + jb2*nf1 + jb3*nf1*nf2)))
-        {
+    if (fftw3_set.is_element(2 * (jb1 + jb2*nf1 + jb3*nf1*nf2)))
+      {
 
 
-          for (unsigned int k3 = 0; k3<2*nspread; ++k3)
-            {
+        for (unsigned int k3 = 0; k3<2*nspread; ++k3)
+          {
 
-              unsigned int local_index = 2*(k3*(2*nspread*2*nspread));
-              for (unsigned int k2 = 0; k2<2*nspread; ++k2)
-                {
-                  types::global_dof_index ii = jb1 + (jb2+k2-(nspread-1))*nf1 + (jb3+k3-(nspread-1))*nf1*nf2;
+            unsigned int local_index = 2*(k3*(2*nspread*2*nspread));
+            for (unsigned int k2 = 0; k2<2*nspread; ++k2)
+              {
+                types::global_dof_index ii = jb1 + (jb2+k2-(nspread-1))*nf1 + (jb3+k3-(nspread-1))*nf1*nf2;
 
-                  for (unsigned int k1 = 0; k1<2*nspread; ++k1)
-                    {
-                      types::global_dof_index istart = 2*(ii+((int)k1 - (int)(nspread-1)));
-                      fine_grid_data[istart] += local_fine_grid_data[local_index];
-                      fine_grid_data[istart+1] += local_fine_grid_data[local_index+1];
-                      local_index += 2;
-                    }
-                }
+                for (unsigned int k1 = 0; k1<2*nspread; ++k1)
+                  {
+                    types::global_dof_index istart = 2*(ii+((int)k1 - (int)(nspread-1)));
+                    fine_grid_data[istart] += local_fine_grid_data[local_index];
+                    fine_grid_data[istart+1] += local_fine_grid_data[local_index+1];
+                    local_index += 2;
+                  }
+              }
 
-            }
-        }
+          }
+      }
 
 
 
@@ -746,7 +746,7 @@ void BlackNUFFT::fast_gaussian_gridding_on_input()
         // FGGCopy foo_copy;
         // WorkStream::run(indy.begin(), indy.end(),
         //                 f_fgg_worker, f_fgg_copier, foo_scratch, foo_copy, 1, 1);
-        for(auto j_it = indy.begin(); j_it!=indy.end(); ++j_it)
+        for (auto j_it = indy.begin(); j_it!=indy.end(); ++j_it)
           f_fgg_tbb(j_it);
 
       }
@@ -761,8 +761,8 @@ void BlackNUFFT::fast_gaussian_gridding_on_input()
         // FGGCopy foo_copy;
         // WorkStream::run(indy.begin(), indy.end(),
         //                 f_fgg_worker, f_fgg_copier, foo_scratch, foo_copy, 1, 1);
-        for(auto j_it = indy.begin(); j_it!=indy.end(); ++j_it)
-           f_fgg_tbb(j_it);
+        for (auto j_it = indy.begin(); j_it!=indy.end(); ++j_it)
+          f_fgg_tbb(j_it);
 
 
       }
