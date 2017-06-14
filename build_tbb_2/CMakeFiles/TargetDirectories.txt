@@ -1,0 +1,8 @@
+/home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/debug.dir
+/home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/demo.dir
+/home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/distclean.dir
+/home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/info.dir
+/home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/release.dir
+/home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/run.dir
+/home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/runclean.dir
+/home/CMAP/nicola.giuliani/BlackNUFFT/build_tbb_2/CMakeFiles/strip_comments.dir

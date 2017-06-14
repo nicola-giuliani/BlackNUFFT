@@ -2,6 +2,9 @@
 #include "fftw3.h"
 #include "fftw3-mpi.h"
 #include <deal.II/base/exceptions.h>
+
+using namespace tbb;
+
 // Function to compute the next integer divisible for 2, 3, and 5.
 int next235(double in)
 {
@@ -436,200 +439,162 @@ void BlackNUFFT::fast_gaussian_gridding_on_input()
       sb[2] = -sb[2];
     }
 
-  // In the following we use WorkStream to parallelise, through TBB, the setting up
-  // of the initial preconditioner that does not consider any constraint.
-  // We define two structs that are needed: the first one is empty since we have decided to use
-  // the capture of lambda functions to let the worker know what it needs. The second one
-  // instead is filled by each worker and passed down by reference to the copier that manage any racing conditions
-  // copying properly the computed data where they belong.
-  struct FGGScratch {};
 
-  // The copier structure holds the thing needed to compute the actual position on the global array
-  // for the copy operation.
-  struct FGGCopy
+  // The following function performs the FGG on all the elements of a given IndexSet.
+  auto f_fgg_tbb = [this, t1, t2, t3] (IndexSet::ElementIterator j_it)
   {
-    Vector<double> local_fine_grid_data;
-    // Variables needed for the Fast Gaussian evaluation.
-    double diff1, diff2, diff3, ang;
-    types::global_dof_index jb1, jb2, jb3;
-    std::complex<double> cs;
-    double cross, cross1;
-    std::vector<types::global_dof_index> local_to_global;
-
-  };
-
-  // The worker function uses the capture to know the actual state of the BlackNUFFT class.
-  // In this way we can perform the computation
-  // of the column to be added at each row quite straigtforwardly. Since all the
-  // workers must be able to run in parallel we must be sure that no racing condition occurs.
-  auto f_fgg_worker = [this,t1,t2,t3] (IndexSet::ElementIterator j_it, FGGScratch &foo, FGGCopy &copy_data)
-  {
-    types::global_dof_index j=*j_it;
-    // We resize everything to be sure to compute, and then copy only the needed data.
-    copy_data.local_fine_grid_data.reinit(2*2*nspread*2*nspread*2*nspread);
-    copy_data.local_to_global.resize(2*nspread*2*nspread*2*nspread);
-    // Vectors needed for the precomputations along the three dimensions. In principle they
-    // belong here but in maybe in the copier they perform better.
+    types::global_dof_index j = *j_it;
     Vector<double> xc(2*nspread), yc(2*nspread), zc(2*nspread);
+    Vector<double> local_fine_grid_data(2*2*nspread*2*nspread*2*nspread);
 
-    copy_data.jb1 = types::global_dof_index(double(nf1/2) + (input_grid[0][j]-xb[0])/hx);
-    copy_data.jb2 = types::global_dof_index(double(nf2/2) + (input_grid[1][j]-xb[1])/hy);
-    copy_data.jb3 = types::global_dof_index(double(nf3/2) + (input_grid[2][j]-xb[2])/hz);
-    copy_data.diff1 = double(nf1/2) + (input_grid[0][j]-xb[0])/hx - copy_data.jb1;
-    copy_data.diff2 = double(nf2/2) + (input_grid[1][j]-xb[1])/hy - copy_data.jb2;
-    copy_data.diff3 = double(nf3/2) + (input_grid[2][j]-xb[2])/hz - copy_data.jb3;
-    copy_data.ang = sb[0]*input_grid[0][j] + sb[1]*input_grid[1][j] + sb[2]*input_grid[2][j];
-    std::complex<double> dummy1(std::cos(copy_data.ang), std::sin(copy_data.ang));
+    types::global_dof_index jb1 = types::global_dof_index(double(nf1/2) + (input_grid[0][j]-xb[0])/hx);
+    types::global_dof_index jb2 = types::global_dof_index(double(nf2/2) + (input_grid[1][j]-xb[1])/hy);
+    types::global_dof_index jb3 = types::global_dof_index(double(nf3/2) + (input_grid[2][j]-xb[2])/hz);
+    double diff1 = double(nf1/2) + (input_grid[0][j]-xb[0])/hx - jb1;
+    double diff2 = double(nf2/2) + (input_grid[1][j]-xb[1])/hy - jb2;
+    double diff3 = double(nf3/2) + (input_grid[2][j]-xb[2])/hz - jb3;
+    double ang = sb[0]*input_grid[0][j] + sb[1]*input_grid[1][j] + sb[2]*input_grid[2][j];
+    std::complex<double> dummy1(std::cos(ang), std::sin(ang));
     std::complex<double> dummy2(input_vector[2*j], input_vector[2*j+1]);
-    copy_data.cs = dummy1 * dummy2;
+    std::complex<double> cs = dummy1 * dummy2;
     // 2) We precompute everything along x. Fast Gaussian Gridding
     // 2a) Precomptaiton in x
     // The original loop was -nspread+1 : nspread
-    xc[nspread-1] = std::exp(-t1*copy_data.diff1*copy_data.diff1
-                             -t2*copy_data.diff2*copy_data.diff2
-                             -t3*copy_data.diff3*copy_data.diff3);
+    xc[nspread-1] = std::exp(-t1*diff1*diff1
+                             -t2*diff2*diff2
+                             -t3*diff3*diff3);
 
-    copy_data.cross = xc[nspread-1];
-    copy_data.cross1 = exp(2.*t1 * copy_data.diff1);
+    double cross = xc[nspread-1];
+    double cross1 = exp(2.*t1 * diff1);
     for (unsigned int k1 = 0; k1 < nspread; ++k1)
       {
-        copy_data.cross = copy_data.cross * copy_data.cross1;
-        xc[nspread+k1] = xexp[k1]*copy_data.cross;
+        cross = cross * cross1;
+        xc[nspread+k1] = xexp[k1]*cross;
       }
-    copy_data.cross = xc[nspread-1];
-    copy_data.cross1 = 1./copy_data.cross1;
+    cross = xc[nspread-1];
+    cross1 = 1./cross1;
     for (unsigned int k1 = 0; k1 < nspread-1; ++k1) // Precomputing everything Watch out for negative indices.
       {
-        copy_data.cross = copy_data.cross * copy_data.cross1;
-        xc[nspread-k1-2] = xexp[k1]*copy_data.cross;
+        cross = cross * cross1;
+        xc[nspread-k1-2] = xexp[k1]*cross;
       }
     // 2b) Precomptaiton in y
     yc[nspread-1] = 1.;
-    copy_data.cross = std::exp(2.*t2 * copy_data.diff2);
-    copy_data.cross1 = copy_data.cross;
+    cross = std::exp(2.*t2 * diff2);
+    cross1 = cross;
     for (unsigned int k2 = 0; k2 < nspread-1; ++k2) //k2 = 1, nspread-1
       {
-        yc[nspread + k2] = yexp[k2]*copy_data.cross;
-        yc[nspread-2-k2] = yexp[k2]/copy_data.cross;
-        copy_data.cross = copy_data.cross * copy_data.cross1;
+        yc[nspread + k2] = yexp[k2]*cross;
+        yc[nspread-2-k2] = yexp[k2]/cross;
+        cross = cross * cross1;
       }
-    yc[2*nspread-1] = yexp[nspread-1]*copy_data.cross;
+    yc[2*nspread-1] = yexp[nspread-1]*cross;
     // 2c) Precomptaiton in z
     zc[nspread-1] = 1.;
-    copy_data.cross = std::exp(2.*t3 * copy_data.diff3);
-    copy_data.cross1 = copy_data.cross;
+    cross = std::exp(2.*t3 * diff3);
+    cross1 = cross;
     for (unsigned int k3 = 0; k3 < nspread-1; ++k3)
       {
-        zc[nspread + k3] = zexp[k3]*copy_data.cross;
-        zc[nspread-2-k3] = zexp[k3]/copy_data.cross;
-        copy_data.cross = copy_data.cross * copy_data.cross1;
+        zc[nspread + k3] = zexp[k3]*cross;
+        zc[nspread-2-k3] = zexp[k3]/cross;
+        cross = cross * cross1;
       }
-    zc[2*nspread-1] = zexp[nspread-1]*copy_data.cross;
+    zc[2*nspread-1] = zexp[nspread-1]*cross;
     // 2d) We put everything together locally
     for (unsigned int k3 = 0; k3<2*nspread; ++k3)
       {
         std::complex<double> c2;
-        c2 = zc[k3] * copy_data.cs;
+        c2 = zc[k3] * cs;
         for (unsigned int k2 = 0; k2<2*nspread; ++k2)
           {
             std::complex<double> cc;
             cc = yc[k2] * c2;
-            types::global_dof_index ii = copy_data.jb1 + (copy_data.jb2+k2-(nspread-1))*nf1 + (copy_data.jb3+k3-(nspread-1))*nf1*nf2;
+            types::global_dof_index ii = jb1 + (jb2+k2-(nspread-1))*nf1 + (jb3+k3-(nspread-1))*nf1*nf2;
             for (unsigned int k1 = 0; k1<2*nspread; ++k1)
               {
                 types::global_dof_index istart = 2*(ii+((int)k1 - (int)(nspread-1)));
                 std::complex<double> zz;
                 zz = xc[k1] * cc;
                 unsigned int local_index = 2*(k3*(2*nspread*2*nspread)+k2*(2*nspread)+k1);
-                copy_data.local_fine_grid_data[local_index] += zz.real();
-                copy_data.local_fine_grid_data[local_index+1] += zz.imag();
-                copy_data.local_to_global[local_index/2] = istart;
+                local_fine_grid_data[local_index] += zz.real();
+                local_fine_grid_data[local_index+1] += zz.imag();
               }
           }
       }
 
-  };
-
-  // The copier function uses the InitPrecCopy structure to know the global indices to add to
-  // the global initial sparsity pattern. We use once again the capture to access the global memory.
-  auto f_fgg_copier = [this] (const FGGCopy &copy_data)
-  {
-    if (fftw3_set.is_element(2 * (copy_data.jb1 + copy_data.jb2*nf1 + copy_data.jb3*nf1*nf2)))
+    if (fftw3_set.is_element(2 * (jb1 + jb2*nf1 + jb3*nf1*nf2)))
       {
 
-        auto fgg_putter = [](unsigned int k3, parallel::distributed::Vector<double> &copy_fine_grid_data, const FGGCopy &copy_data, const BlackNUFFT * foo_nufft)
-        {
-          unsigned int local_index = 2*(k3*(2*foo_nufft->nspread*2*foo_nufft->nspread));
-          for (unsigned int k2 = 0; k2<2*foo_nufft->nspread; ++k2)
-            {
-              for (unsigned int k1 = 0; k1<2*foo_nufft->nspread; ++k1)
-                {
-                  // types::global_dof_index istart = 2*(ii+(k1 - (nspread-1)));
-                  // OCCHIO AL CONTATORE
-                  // unsigned int local_index = 2*(k3*(2*foo_nufft->nspread*2*foo_nufft->nspread)+k2*(2*foo_nufft->nspread)+k1);
-                  copy_fine_grid_data[copy_data.local_to_global[local_index/2]] += copy_data.local_fine_grid_data[local_index];
-                  copy_fine_grid_data[copy_data.local_to_global[local_index/2]+1] += copy_data.local_fine_grid_data[local_index+1];
-                  local_index += 2;
-                }
-            }
 
-        };
-
-        // For any k3 we have no race condition so we can use TaskGroup to handle it
-        Threads::TaskGroup<> group_fgg_putter;
         for (unsigned int k3 = 0; k3<2*nspread; ++k3)
           {
 
             unsigned int local_index = 2*(k3*(2*nspread*2*nspread));
             for (unsigned int k2 = 0; k2<2*nspread; ++k2)
               {
+                types::global_dof_index ii = jb1 + (jb2+k2-(nspread-1))*nf1 + (jb3+k3-(nspread-1))*nf1*nf2;
+
                 for (unsigned int k1 = 0; k1<2*nspread; ++k1)
                   {
-                    // types::global_dof_index istart = 2*(ii+(k1 - (nspread-1)));
-                    // OCCHIO AL CONTATORE
-                    // unsigned int local_index = 2*(k3*(2*foo_nufft->nspread*2*foo_nufft->nspread)+k2*(2*foo_nufft->nspread)+k1);
-                    fine_grid_data[copy_data.local_to_global[local_index/2]] += copy_data.local_fine_grid_data[local_index];
-                    fine_grid_data[copy_data.local_to_global[local_index/2]+1] += copy_data.local_fine_grid_data[local_index+1];
+                    types::global_dof_index istart = 2*(ii+((int)k1 - (int)(nspread-1)));
+                    fine_grid_data[istart] += local_fine_grid_data[local_index];
+                    fine_grid_data[istart+1] += local_fine_grid_data[local_index+1];
                     local_index += 2;
                   }
               }
 
-            // group_fgg_putter += Threads::new_task ( static_cast<void (*)(unsigned int, parallel::distributed::Vector<double> &, const FGGCopy &, const BlackNUFFT *)> (fgg_putter), k3, fine_grid_data, copy_data, this);
           }
-        // group_fgg_putter.join_all();
       }
 
+
+
+
+
   };
 
-  unsigned int foo1,foo2;
-  auto f_dummy_worker_odd = [f_fgg_worker,f_fgg_copier,this](types::global_dof_index first_it, unsigned int foo1, unsigned int foo2)
+
+  // FGG on all the even sets.
+  auto f_dummy_worker_even_tbb = [f_fgg_tbb,this](blocked_range<unsigned int> r)
   {
-    // We need to create two empty structures that will be copied by WorkStream and passed
-    // to each worker-copier to compute the sparsity pattern for blocks in the childlessList.
-    FGGScratch foo_scratch;
-    FGGCopy foo_copy;
-    WorkStream::run(grid_sets[0][first_it].begin(), grid_sets[0][first_it].end(),
-                    f_fgg_worker, f_fgg_copier, foo_scratch, foo_copy);
+    for (unsigned int i=r.begin(); i<r.end(); ++i)
+      {
+        auto indy = grid_sets[1][i];
+        // FGGScratch foo_scratch;
+        // FGGCopy foo_copy;
+        // WorkStream::run(indy.begin(), indy.end(),
+        //                 f_fgg_worker, f_fgg_copier, foo_scratch, foo_copy, 1, 1);
+        for (auto j_it = indy.begin(); j_it!=indy.end(); ++j_it)
+          f_fgg_tbb(j_it);
+
+      }
   };
-  auto f_dummy_copier_odd = [](const unsigned int foo2) {};
-  auto f_dummy_worker_even = [f_fgg_worker,f_fgg_copier,this](types::global_dof_index first_it, unsigned int foo1, unsigned int foo2)
+
+  // FGG on all the odd sets.
+  auto f_dummy_worker_odd_tbb = [f_fgg_tbb,this](blocked_range<unsigned int> r)
   {
-    FGGScratch foo_scratch;
-    FGGCopy foo_copy;
-    WorkStream::run(grid_sets[1][first_it].begin(), grid_sets[1][first_it].end(),
-                    f_fgg_worker, f_fgg_copier, foo_scratch, foo_copy);
+    for (unsigned int i=r.begin(); i<r.end(); ++i)
+      {
+        auto indy = grid_sets[0][i];
+        // FGGScratch foo_scratch;
+        // FGGCopy foo_copy;
+        // WorkStream::run(indy.begin(), indy.end(),
+        //                 f_fgg_worker, f_fgg_copier, foo_scratch, foo_copy, 1, 1);
+        for (auto j_it = indy.begin(); j_it!=indy.end(); ++j_it)
+          f_fgg_tbb(j_it);
+
+
+      }
   };
-  auto f_dummy_copier_even = [](const unsigned int foo2) {};
-
-  WorkStream::run(0,grid_sets[1].size(),f_dummy_worker_even,f_dummy_copier_even,foo1,foo2);//,2*MultithreadInfo::n_threads(),8);
-
-  WorkStream::run(0,grid_sets[0].size(),f_dummy_worker_odd,f_dummy_copier_odd,foo1,foo2);//,2*MultithreadInfo::n_threads(),8);
 
 
-  // The following is to have the classical WorkStream run on all the input set
-  // WorkStream::run(input_set.begin(), input_set.end(), f_fgg_worker, f_fgg_copier, foo_scratch, foo_copy);
+  // Since no race condition can occur between different odd-odd even-even sets we can parallelise them using tbb.
+  parallel_for(blocked_range<unsigned int> (0, grid_sets[1].size(),1), f_dummy_worker_even_tbb);
+
+  parallel_for(blocked_range<unsigned int> (0, grid_sets[0].size(),1), f_dummy_worker_odd_tbb);
+
+
+  // We put the distributed vector in "standard mode" performing a compress operation.
   fine_grid_data.compress(VectorOperation::add);
-  // pcout<<fine_grid_data.l2_norm()<<std::endl;
 
 
   if (!fft_backward)
@@ -638,6 +603,200 @@ void BlackNUFFT::fast_gaussian_gridding_on_input()
       sb[1] = -sb[1];
       sb[2] = -sb[2];
     }
+
+
+  // // In the following we use WorkStream to parallelise, through TBB, the setting up
+  // // of the initial preconditioner that does not consider any constraint.
+  // // We define two structs that are needed: the first one is empty since we have decided to use
+  // // the capture of lambda functions to let the worker know what it needs. The second one
+  // // instead is filled by each worker and passed down by reference to the copier that manage any racing conditions
+  // // copying properly the computed data where they belong.
+  // struct FGGScratch {};
+  //
+  // // The copier structure holds the thing needed to compute the actual position on the global array
+  // // for the copy operation.
+  // struct FGGCopy
+  // {
+  //   Vector<double> local_fine_grid_data;
+  //   // Variables needed for the Fast Gaussian evaluation.
+  //   double diff1, diff2, diff3, ang;
+  //   types::global_dof_index jb1, jb2, jb3;
+  //   std::complex<double> cs;
+  //   double cross, cross1;
+  //   std::vector<types::global_dof_index> local_to_global;
+  //
+  // };
+  //
+  // // The worker function uses the capture to know the actual state of the BlackNUFFT class.
+  // // In this way we can perform the computation
+  // // of the column to be added at each row quite straigtforwardly. Since all the
+  // // workers must be able to run in parallel we must be sure that no racing condition occurs.
+  // auto f_fgg_worker = [this,t1,t2,t3] (IndexSet::ElementIterator j_it, FGGScratch &foo, FGGCopy &copy_data)
+  // {
+  //   types::global_dof_index j=*j_it;
+  //   // We resize everything to be sure to compute, and then copy only the needed data.
+  //   copy_data.local_fine_grid_data.reinit(2*2*nspread*2*nspread*2*nspread);
+  //   copy_data.local_to_global.resize(2*nspread*2*nspread*2*nspread);
+  //   // Vectors needed for the precomputations along the three dimensions. In principle they
+  //   // belong here but in maybe in the copier they perform better.
+  //   Vector<double> xc(2*nspread), yc(2*nspread), zc(2*nspread);
+  //
+  //   copy_data.jb1 = types::global_dof_index(double(nf1/2) + (input_grid[0][j]-xb[0])/hx);
+  //   copy_data.jb2 = types::global_dof_index(double(nf2/2) + (input_grid[1][j]-xb[1])/hy);
+  //   copy_data.jb3 = types::global_dof_index(double(nf3/2) + (input_grid[2][j]-xb[2])/hz);
+  //   copy_data.diff1 = double(nf1/2) + (input_grid[0][j]-xb[0])/hx - copy_data.jb1;
+  //   copy_data.diff2 = double(nf2/2) + (input_grid[1][j]-xb[1])/hy - copy_data.jb2;
+  //   copy_data.diff3 = double(nf3/2) + (input_grid[2][j]-xb[2])/hz - copy_data.jb3;
+  //   copy_data.ang = sb[0]*input_grid[0][j] + sb[1]*input_grid[1][j] + sb[2]*input_grid[2][j];
+  //   std::complex<double> dummy1(std::cos(copy_data.ang), std::sin(copy_data.ang));
+  //   std::complex<double> dummy2(input_vector[2*j], input_vector[2*j+1]);
+  //   copy_data.cs = dummy1 * dummy2;
+  //   // 2) We precompute everything along x. Fast Gaussian Gridding
+  //   // 2a) Precomptaiton in x
+  //   // The original loop was -nspread+1 : nspread
+  //   xc[nspread-1] = std::exp(-t1*copy_data.diff1*copy_data.diff1
+  //                            -t2*copy_data.diff2*copy_data.diff2
+  //                            -t3*copy_data.diff3*copy_data.diff3);
+  //
+  //   copy_data.cross = xc[nspread-1];
+  //   copy_data.cross1 = exp(2.*t1 * copy_data.diff1);
+  //   for (unsigned int k1 = 0; k1 < nspread; ++k1)
+  //     {
+  //       copy_data.cross = copy_data.cross * copy_data.cross1;
+  //       xc[nspread+k1] = xexp[k1]*copy_data.cross;
+  //     }
+  //   copy_data.cross = xc[nspread-1];
+  //   copy_data.cross1 = 1./copy_data.cross1;
+  //   for (unsigned int k1 = 0; k1 < nspread-1; ++k1) // Precomputing everything Watch out for negative indices.
+  //     {
+  //       copy_data.cross = copy_data.cross * copy_data.cross1;
+  //       xc[nspread-k1-2] = xexp[k1]*copy_data.cross;
+  //     }
+  //   // 2b) Precomptaiton in y
+  //   yc[nspread-1] = 1.;
+  //   copy_data.cross = std::exp(2.*t2 * copy_data.diff2);
+  //   copy_data.cross1 = copy_data.cross;
+  //   for (unsigned int k2 = 0; k2 < nspread-1; ++k2) //k2 = 1, nspread-1
+  //     {
+  //       yc[nspread + k2] = yexp[k2]*copy_data.cross;
+  //       yc[nspread-2-k2] = yexp[k2]/copy_data.cross;
+  //       copy_data.cross = copy_data.cross * copy_data.cross1;
+  //     }
+  //   yc[2*nspread-1] = yexp[nspread-1]*copy_data.cross;
+  //   // 2c) Precomptaiton in z
+  //   zc[nspread-1] = 1.;
+  //   copy_data.cross = std::exp(2.*t3 * copy_data.diff3);
+  //   copy_data.cross1 = copy_data.cross;
+  //   for (unsigned int k3 = 0; k3 < nspread-1; ++k3)
+  //     {
+  //       zc[nspread + k3] = zexp[k3]*copy_data.cross;
+  //       zc[nspread-2-k3] = zexp[k3]/copy_data.cross;
+  //       copy_data.cross = copy_data.cross * copy_data.cross1;
+  //     }
+  //   zc[2*nspread-1] = zexp[nspread-1]*copy_data.cross;
+  //   // 2d) We put everything together locally
+  //   for (unsigned int k3 = 0; k3<2*nspread; ++k3)
+  //     {
+  //       std::complex<double> c2;
+  //       c2 = zc[k3] * copy_data.cs;
+  //       for (unsigned int k2 = 0; k2<2*nspread; ++k2)
+  //         {
+  //           std::complex<double> cc;
+  //           cc = yc[k2] * c2;
+  //           types::global_dof_index ii = copy_data.jb1 + (copy_data.jb2+k2-(nspread-1))*nf1 + (copy_data.jb3+k3-(nspread-1))*nf1*nf2;
+  //           for (unsigned int k1 = 0; k1<2*nspread; ++k1)
+  //             {
+  //               types::global_dof_index istart = 2*(ii+((int)k1 - (int)(nspread-1)));
+  //               std::complex<double> zz;
+  //               zz = xc[k1] * cc;
+  //               unsigned int local_index = 2*(k3*(2*nspread*2*nspread)+k2*(2*nspread)+k1);
+  //               copy_data.local_fine_grid_data[local_index] += zz.real();
+  //               copy_data.local_fine_grid_data[local_index+1] += zz.imag();
+  //               copy_data.local_to_global[local_index/2] = istart;
+  //             }
+  //         }
+  //     }
+  //
+  // };
+  //
+  // // The copier function uses the InitPrecCopy structure to know the global indices to add to
+  // // the global initial sparsity pattern. We use once again the capture to access the global memory.
+  // auto f_fgg_copier = [this] (const FGGCopy &copy_data)
+  // {
+  //   if (fftw3_set.is_element(2 * (copy_data.jb1 + copy_data.jb2*nf1 + copy_data.jb3*nf1*nf2)))
+  //     {
+  //
+  //       auto fgg_putter = [](unsigned int k3, parallel::distributed::Vector<double> &copy_fine_grid_data, const FGGCopy &copy_data, const BlackNUFFT * foo_nufft)
+  //       {
+  //         unsigned int local_index = 2*(k3*(2*foo_nufft->nspread*2*foo_nufft->nspread));
+  //         for (unsigned int k2 = 0; k2<2*foo_nufft->nspread; ++k2)
+  //           {
+  //             for (unsigned int k1 = 0; k1<2*foo_nufft->nspread; ++k1)
+  //               {
+  //                 // types::global_dof_index istart = 2*(ii+(k1 - (nspread-1)));
+  //                 // OCCHIO AL CONTATORE
+  //                 // unsigned int local_index = 2*(k3*(2*foo_nufft->nspread*2*foo_nufft->nspread)+k2*(2*foo_nufft->nspread)+k1);
+  //                 copy_fine_grid_data[copy_data.local_to_global[local_index/2]] += copy_data.local_fine_grid_data[local_index];
+  //                 copy_fine_grid_data[copy_data.local_to_global[local_index/2]+1] += copy_data.local_fine_grid_data[local_index+1];
+  //                 local_index += 2;
+  //               }
+  //           }
+  //
+  //       };
+  //
+  //       // For any k3 we have no race condition so we can use TaskGroup to handle it
+  //       Threads::TaskGroup<> group_fgg_putter;
+  //       for (unsigned int k3 = 0; k3<2*nspread; ++k3)
+  //         {
+  //
+  //           unsigned int local_index = 2*(k3*(2*nspread*2*nspread));
+  //           for (unsigned int k2 = 0; k2<2*nspread; ++k2)
+  //             {
+  //               for (unsigned int k1 = 0; k1<2*nspread; ++k1)
+  //                 {
+  //                   // types::global_dof_index istart = 2*(ii+(k1 - (nspread-1)));
+  //                   // OCCHIO AL CONTATORE
+  //                   // unsigned int local_index = 2*(k3*(2*foo_nufft->nspread*2*foo_nufft->nspread)+k2*(2*foo_nufft->nspread)+k1);
+  //                   fine_grid_data[copy_data.local_to_global[local_index/2]] += copy_data.local_fine_grid_data[local_index];
+  //                   fine_grid_data[copy_data.local_to_global[local_index/2]+1] += copy_data.local_fine_grid_data[local_index+1];
+  //                   local_index += 2;
+  //                 }
+  //             }
+  //
+  //           // group_fgg_putter += Threads::new_task ( static_cast<void (*)(unsigned int, parallel::distributed::Vector<double> &, const FGGCopy &, const BlackNUFFT *)> (fgg_putter), k3, fine_grid_data, copy_data, this);
+  //         }
+  //       // group_fgg_putter.join_all();
+  //     }
+  //
+  // };
+  //
+  // unsigned int foo1,foo2;
+  // auto f_dummy_worker_odd = [f_fgg_worker,f_fgg_copier,this](types::global_dof_index first_it, unsigned int foo1, unsigned int foo2)
+  // {
+  //   // We need to create two empty structures that will be copied by WorkStream and passed
+  //   // to each worker-copier to compute the sparsity pattern for blocks in the childlessList.
+  //   FGGScratch foo_scratch;
+  //   FGGCopy foo_copy;
+  //   WorkStream::run(grid_sets[0][first_it].begin(), grid_sets[0][first_it].end(),
+  //                   f_fgg_worker, f_fgg_copier, foo_scratch, foo_copy);
+  // };
+  // auto f_dummy_copier_odd = [](const unsigned int foo2) {};
+  // auto f_dummy_worker_even = [f_fgg_worker,f_fgg_copier,this](types::global_dof_index first_it, unsigned int foo1, unsigned int foo2)
+  // {
+  //   FGGScratch foo_scratch;
+  //   FGGCopy foo_copy;
+  //   WorkStream::run(grid_sets[1][first_it].begin(), grid_sets[1][first_it].end(),
+  //                   f_fgg_worker, f_fgg_copier, foo_scratch, foo_copy);
+  // };
+  // auto f_dummy_copier_even = [](const unsigned int foo2) {};
+  // WorkStream::run(0,grid_sets[1].size(),f_dummy_worker_even,f_dummy_copier_even,foo1,foo2);//,2*MultithreadInfo::n_threads(),8);
+  //
+  // WorkStream::run(0,grid_sets[0].size(),f_dummy_worker_odd,f_dummy_copier_odd,foo1,foo2);//,2*MultithreadInfo::n_threads(),8);
+
+
+  // The following is to have the classical WorkStream run on all the input set
+  // WorkStream::run(input_set.begin(), input_set.end(), f_fgg_worker, f_fgg_copier, foo_scratch, foo_copy);
+
 
 }
 
@@ -650,69 +809,127 @@ void BlackNUFFT::scaling_input_gridding()
   TimerOutput::Scope t(computing_timer, " Deconvolution Before FFT ");
 
 
-  auto f_scaling_input_gridding = [] (types::global_dof_index k2, types::global_dof_index k1, parallel::distributed::Vector<double> &fine_grid_data_copy, const BlackNUFFT *foo_nufft)
+
+
+  auto f_scaling_input_gridding_tbb = [this] (blocked_range<types::global_dof_index> r)
   {
-
-    types::global_dof_index ii;
-    ii = (foo_nufft->nf1/2+k1-foo_nufft->iw7) +
-         (foo_nufft->nf2/2+k2-foo_nufft->iw8)*foo_nufft->nf1 +
-         (foo_nufft->nf3/2)*foo_nufft->nf1*foo_nufft->nf2;
-
-    double cross = foo_nufft->deconv_array_x[std::abs((types::signed_global_dof_index)k1-(types::signed_global_dof_index)foo_nufft->iw7)] *
-                   foo_nufft->deconv_array_y[std::abs((types::signed_global_dof_index)k2-(types::signed_global_dof_index)foo_nufft->iw8)];
-
-    std::complex<double> c2;
-    std::complex<double> zz;
-
-    if (foo_nufft->fftw3_set.is_element(2*ii))
+    for (types::global_dof_index k2=r.begin(); k2<r.end(); ++k2)
       {
-        c2 = std::complex<double>(fine_grid_data_copy[2*ii],fine_grid_data_copy[2*ii+1]);
-        zz = (cross*foo_nufft->deconv_array_z[0])*c2;
-        fine_grid_data_copy[2*ii] = zz.real();
-        fine_grid_data_copy[2*ii+1] = zz.imag();
-      }
-
-    for (types::global_dof_index k3 = 1; k3 <= foo_nufft->iw9; ++k3)
-      {
-
-        types::global_dof_index is2;
-
-        is2 = 2*(ii+k3*foo_nufft->nf1*foo_nufft->nf2);
-        if (foo_nufft->fftw3_set.is_element(is2))
+        // std::cout<<"k2 : "<<k2<<std::endl;
+        for (types::global_dof_index k1=0; k1<2*iw7+1; ++k1)
           {
-            c2 = std::complex<double>(fine_grid_data_copy[is2],fine_grid_data_copy[is2+1]);
-            zz = (cross*foo_nufft->deconv_array_z[k3])*c2;
-            fine_grid_data_copy[is2] = zz.real();
-            fine_grid_data_copy[is2+1] = zz.imag();
+            types::global_dof_index ii;
+            ii = ( nf1/2+k1- iw7) +
+                 ( nf2/2+k2- iw8)* nf1 +
+                 ( nf3/2)* nf1* nf2;
+
+            double cross =  deconv_array_x[std::abs((types::signed_global_dof_index)k1-(types::signed_global_dof_index) iw7)] *
+                            deconv_array_y[std::abs((types::signed_global_dof_index)k2-(types::signed_global_dof_index) iw8)];
+
+            std::complex<double> c2;
+            std::complex<double> zz;
+
+            if ( fftw3_set.is_element(2*ii))
+              {
+                c2 = std::complex<double>(fine_grid_data[2*ii],fine_grid_data[2*ii+1]);
+                zz = (cross* deconv_array_z[0])*c2;
+                fine_grid_data[2*ii] = zz.real();
+                fine_grid_data[2*ii+1] = zz.imag();
+              }
+
+            for (types::global_dof_index k3 = 1; k3 <=  iw9; ++k3)
+              {
+
+                types::global_dof_index is2;
+
+                is2 = 2*(ii+k3* nf1* nf2);
+                if ( fftw3_set.is_element(is2))
+                  {
+                    c2 = std::complex<double>(fine_grid_data[is2],fine_grid_data[is2+1]);
+                    zz = (cross* deconv_array_z[k3])*c2;
+                    fine_grid_data[is2] = zz.real();
+                    fine_grid_data[is2+1] = zz.imag();
+                  }
+                is2 = 2*(ii-k3* nf1* nf2);
+                if ( fftw3_set.is_element(is2))
+                  {
+                    c2 = std::complex<double>(fine_grid_data[is2],fine_grid_data[is2+1]);
+                    zz = (cross* deconv_array_z[k3])*c2;
+                    fine_grid_data[is2] = zz.real();
+                    fine_grid_data[is2+1] = zz.imag();
+                  }
+                // std::cout<<is2<<" ";
+              }
           }
-        is2 = 2*(ii-k3*foo_nufft->nf1*foo_nufft->nf2);
-        if (foo_nufft->fftw3_set.is_element(is2))
-          {
-            c2 = std::complex<double>(fine_grid_data_copy[is2],fine_grid_data_copy[is2+1]);
-            zz = (cross*foo_nufft->deconv_array_z[k3])*c2;
-            fine_grid_data_copy[is2] = zz.real();
-            fine_grid_data_copy[is2+1] = zz.imag();
-          }
+        // std::cout<<std::endl;
       }
   };
 
-  Threads::TaskGroup<> scaling_input_gridding_group;
-  for (types::global_dof_index k2 = 0; k2<2*iw8+1; ++k2)
-    {
-      for (types::global_dof_index k1 = 0; k1<2*iw7+1; ++k1)
-        {
-          scaling_input_gridding_group += Threads::new_task ( static_cast<void (*)(types::global_dof_index, types::global_dof_index, parallel::distributed::Vector<double> &, const BlackNUFFT *)> (f_scaling_input_gridding), k2, k1, fine_grid_data, this);
-        }
-    }
-  scaling_input_gridding_group.join_all();
+  parallel_for(blocked_range<types::global_dof_index> (0, 2*iw8+1,10), f_scaling_input_gridding_tbb);
 
-  // for(types::global_dof_index i = 0; i<fine_grid_data.size()/2; ++i)
-  //   // fine_grid_data[i]=test_data_before[i];
-  //   if(std::abs(fine_grid_data[2*i]-test_data_before[2*i])>1e-3)
+
+  // Old implementation using TaskGroup.
+  // auto f_scaling_input_gridding = [] (types::global_dof_index k2, types::global_dof_index k1, parallel::distributed::Vector<double> &fine_grid_data_copy, const BlackNUFFT *foo_nufft)
+  // {
+  //
+  //   types::global_dof_index ii;
+  //   ii = (foo_nufft->nf1/2+k1-foo_nufft->iw7) +
+  //        (foo_nufft->nf2/2+k2-foo_nufft->iw8)*foo_nufft->nf1 +
+  //        (foo_nufft->nf3/2)*foo_nufft->nf1*foo_nufft->nf2;
+  //
+  //   double cross = foo_nufft->deconv_array_x[std::abs((types::signed_global_dof_index)k1-(types::signed_global_dof_index)foo_nufft->iw7)] *
+  //                  foo_nufft->deconv_array_y[std::abs((types::signed_global_dof_index)k2-(types::signed_global_dof_index)foo_nufft->iw8)];
+  //
+  //   std::complex<double> c2;
+  //   std::complex<double> zz;
+  //
+  //   if (foo_nufft->fftw3_set.is_element(2*ii))
+  //     {
+  //       c2 = std::complex<double>(fine_grid_data_copy[2*ii],fine_grid_data_copy[2*ii+1]);
+  //       zz = (cross*foo_nufft->deconv_array_z[0])*c2;
+  //       fine_grid_data_copy[2*ii] = zz.real();
+  //       fine_grid_data_copy[2*ii+1] = zz.imag();
+  //     }
+  //
+  //   for (types::global_dof_index k3 = 1; k3 <= foo_nufft->iw9; ++k3)
+  //     {
+  //
+  //       types::global_dof_index is2;
+  //
+  //       is2 = 2*(ii+k3*foo_nufft->nf1*foo_nufft->nf2);
+  //       if (foo_nufft->fftw3_set.is_element(is2))
+  //         {
+  //           c2 = std::complex<double>(fine_grid_data_copy[is2],fine_grid_data_copy[is2+1]);
+  //           zz = (cross*foo_nufft->deconv_array_z[k3])*c2;
+  //           fine_grid_data_copy[is2] = zz.real();
+  //           fine_grid_data_copy[is2+1] = zz.imag();
+  //         }
+  //       is2 = 2*(ii-k3*foo_nufft->nf1*foo_nufft->nf2);
+  //       if (foo_nufft->fftw3_set.is_element(is2))
+  //         {
+  //           c2 = std::complex<double>(fine_grid_data_copy[is2],fine_grid_data_copy[is2+1]);
+  //           zz = (cross*foo_nufft->deconv_array_z[k3])*c2;
+  //           fine_grid_data_copy[is2] = zz.real();
+  //           fine_grid_data_copy[is2+1] = zz.imag();
+  //         }
+  //       // std::cout<<is2<<" ";
+  //
+  //     }
+  // };
+  // Threads::TaskGroup<> scaling_input_gridding_group;
+  //
+  // for (types::global_dof_index k2 = 0; k2<2*iw8+1; ++k2)
   //   {
-  //     std::cout<<"ERROR BEFORE FFT "<<fine_grid_data[2*i]<<" "<<test_data_before[2*i]<<" "<<fine_grid_data[2*i+1]<<" "<<test_data_before[2*i+1]<<" "<<2*i<<std::endl;
+  //     // std::cout<<"k2 : "<<k2<<std::endl;
+  //     for (types::global_dof_index k1 = 0; k1<2*iw7+1; ++k1)
+  //       {
+  //         scaling_input_gridding_group += Threads::new_task ( static_cast<void (*)(types::global_dof_index, types::global_dof_index, parallel::distributed::Vector<double> &, const BlackNUFFT *)> (f_scaling_input_gridding), k2, k1, fine_grid_data, this);
+  //         // f_scaling_input_gridding(k2,k1,fine_grid_data,this);
+  //       }
+  //       // std::cout<<std::endl;
+  //
   //   }
-
+  // scaling_input_gridding_group.join_all();
 
 }
 
@@ -880,65 +1097,92 @@ void BlackNUFFT::shift_data_for_fftw3d()
   TimerOutput::Scope t(computing_timer, " Shift Data for FFTW3D ");
 
 
-  auto f_shift_odd_start = [] (types::global_dof_index k3, parallel::distributed::Vector<double> &fine_grid_data_copy, const BlackNUFFT *foo_nufft)
+
+  // Given a set of index along the coarsest dimension it shifts them
+  auto f_shift_tbb = [this] (const blocked_range<types::global_dof_index> &r)
   {
-
-    for (types::global_dof_index k2 = 0; k2 < (foo_nufft->nf2)*foo_nufft->nf1; k2=k2+2)
-      {
-        fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2)] *= -1;
-        fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2)+1] *= -1;
-
-      }
-  };
-  auto f_shift_even_start = [] (types::global_dof_index k3, parallel::distributed::Vector<double> &fine_grid_data_copy, const BlackNUFFT *foo_nufft)
-  {
-
-    for (types::global_dof_index k2 = 0; k2 < foo_nufft->nf2; k2=k2+1)
-      {
-        for (types::global_dof_index k1 = 0; k1 < (foo_nufft->nf1); ++k1)
-          {
-
-            fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2)] *= -1;
-            fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2)+1] *= -1;
-
-          }
-      }
-  };
-  auto f_shift = [] (types::global_dof_index k3, parallel::distributed::Vector<double> &fine_grid_data_copy, const BlackNUFFT *foo_nufft)
-  {
-    for (types::global_dof_index k2 = 0; k2 < (foo_nufft->nf2); ++k2)
-      {
-        // types::global_dof_index ii = (nf2/2+k2-nspread-iw8)*nf1 + (nf3/2+k3-nspread-iw9)*nf1*nf2;
-        for (types::global_dof_index k1 = 0; k1 < (foo_nufft->nf1); ++k1)
-          {
-            // types::global_dof_index istart = 2 * (ii+nf1/2+k1);
-            // types::global_dof_index is2 = 2 * (ii+nf1/2-k1);
-            // fine_grid_data[istart-1] = - fine_grid_data[istart-1];
-            // fine_grid_data[istart+1-1] = - fine_grid_data[istart+1-1];
-            // fine_grid_data[is2-1] = - fine_grid_data[is2-1];
-            // fine_grid_data[is2+1-1] = - fine_grid_data[is2+1-1];
-
-            double multi = -2*(double)((k3+k2+k1)%2)+1;
-            // std::cout<<multi<<" "<<std::pow(-1,k3+k2+k1) <<std::endl;
-            fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2*foo_nufft->nf1+k1)] *= multi;//std::pow(-1,k3+k2+k1);
-            fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2*foo_nufft->nf1+k1)+1] *= multi;//std::pow(-1,k3+k2+k1);
-            // fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2*foo_nufft->nf1+k1)] -= 2*fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2*foo_nufft->nf1+k1)];
-            // fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2*foo_nufft->nf1+k1)+1] -= 2*fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2*foo_nufft->nf1+k1)+1];
+    for (types::global_dof_index k3=r.begin(); k3<r.end(); ++k3)
+      for (types::global_dof_index k2 = 0; k2 < (nf2); ++k2)
+        {
+          // types::global_dof_index ii = (nf2/2+k2-nspread-iw8)*nf1 + (nf3/2+k3-nspread-iw9)*nf1*nf2;
+          for (types::global_dof_index k1 = 0; k1 < (nf1); ++k1)
+            {
+              double multi = -2*(double)((k3+k2+k1)%2)+1;
+              fine_grid_data[2*(k3*nf1*nf2+k2*nf1+k1)] *= multi;//std::pow(-1,k3+k2+k1);
+              fine_grid_data[2*(k3*nf1*nf2+k2*nf1+k1)+1] *= multi;//std::pow(-1,k3+k2+k1);
 
 
-          }
+            }
 
-      }
+        }
   };
 
-  Threads::TaskGroup<> shift_data_group;
+
   // We need the shift only on the locally owned data.
-  for (types::global_dof_index k3 = local_nf3_start; k3<(local_nf3+local_nf3_start); ++k3)
-    {
-      shift_data_group += Threads::new_task ( static_cast<void (*)(types::global_dof_index, parallel::distributed::Vector<double> &, const BlackNUFFT *)> (f_shift), k3, fine_grid_data, this);
-    }
+  types::global_dof_index blocking=10;
+  tbb::parallel_for(blocked_range<types::global_dof_index> (local_nf3_start, local_nf3+local_nf3_start,blocking), f_shift_tbb);
 
-  shift_data_group.join_all();
+
+
+  // Old implementation using TaskGroup
+  // auto f_shift_odd_start = [] (types::global_dof_index k3, parallel::distributed::Vector<double> &fine_grid_data_copy, const BlackNUFFT *foo_nufft)
+  // {
+  //
+  //   for (types::global_dof_index k2 = 0; k2 < (foo_nufft->nf2)*foo_nufft->nf1; k2=k2+2)
+  //     {
+  //       fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2)] *= -1;
+  //       fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2)+1] *= -1;
+  //
+  //     }
+  // };
+  // auto f_shift_even_start = [] (types::global_dof_index k3, parallel::distributed::Vector<double> &fine_grid_data_copy, const BlackNUFFT *foo_nufft)
+  // {
+  //
+  //   for (types::global_dof_index k2 = 0; k2 < foo_nufft->nf2; k2=k2+1)
+  //     {
+  //       for (types::global_dof_index k1 = 0; k1 < (foo_nufft->nf1); ++k1)
+  //         {
+  //
+  //           fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2)] *= -1;
+  //           fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2)+1] *= -1;
+  //
+  //         }
+  //     }
+  // };
+  // auto f_shift = [] (types::global_dof_index k3, parallel::distributed::Vector<double> &fine_grid_data_copy, const BlackNUFFT *foo_nufft)
+  // {
+  //   for (types::global_dof_index k2 = 0; k2 < (foo_nufft->nf2); ++k2)
+  //     {
+  //       // types::global_dof_index ii = (nf2/2+k2-nspread-iw8)*nf1 + (nf3/2+k3-nspread-iw9)*nf1*nf2;
+  //       for (types::global_dof_index k1 = 0; k1 < (foo_nufft->nf1); ++k1)
+  //         {
+  //           // types::global_dof_index istart = 2 * (ii+nf1/2+k1);
+  //           // types::global_dof_index is2 = 2 * (ii+nf1/2-k1);
+  //           // fine_grid_data[istart-1] = - fine_grid_data[istart-1];
+  //           // fine_grid_data[istart+1-1] = - fine_grid_data[istart+1-1];
+  //           // fine_grid_data[is2-1] = - fine_grid_data[is2-1];
+  //           // fine_grid_data[is2+1-1] = - fine_grid_data[is2+1-1];
+  //
+  //           double multi = -2*(double)((k3+k2+k1)%2)+1;
+  //           // std::cout<<multi<<" "<<std::pow(-1,k3+k2+k1) <<std::endl;
+  //           fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2*foo_nufft->nf1+k1)] *= multi;//std::pow(-1,k3+k2+k1);
+  //           fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2*foo_nufft->nf1+k1)+1] *= multi;//std::pow(-1,k3+k2+k1);
+  //           // fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2*foo_nufft->nf1+k1)] -= 2*fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2*foo_nufft->nf1+k1)];
+  //           // fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2*foo_nufft->nf1+k1)+1] -= 2*fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2*foo_nufft->nf1+k1)+1];
+  //
+  //
+  //         }
+  //
+  //     }
+  // };
+  // Threads::TaskGroup<> shift_data_group;
+  //
+  // for (types::global_dof_index k3 = local_nf3_start; k3<(local_nf3+local_nf3_start); ++k3)
+  //   {
+  //     shift_data_group += Threads::new_task ( static_cast<void (*)(types::global_dof_index, parallel::distributed::Vector<double> &, const BlackNUFFT *)> (f_shift), k3, fine_grid_data, this);
+  //   }
+  //
+  // shift_data_group.join_all();
 
   // Now we can distribute the results of the shifted 3d FFT.
   fine_grid_data.compress(VectorOperation::add);
@@ -1126,35 +1370,67 @@ void BlackNUFFT::scaling_output_gridding()
       xb[2] = -xb[2];
     }
 
-  auto f_scaling_output_gridding = [] (IndexSet::ElementIterator j_it, double t1, double t2, double t3, std::vector<double> &output_vector_copy, const BlackNUFFT *foo_nufft)
+
+  auto f_scaling_output_gridding_tbb = [this,t1,t2,t3] (blocked_range<unsigned int> r)
   {
-    types::global_dof_index j=*j_it;
-    std::complex<double> helper(output_vector_copy[2*j],output_vector_copy[2*j+1]);
-    // std::cout<<helper<<" ";
-    // double foo = (std::exp(t1*(foo_nufft->output_grid[0][j]-foo_nufft->sb[0])*(foo_nufft->output_grid[0][j]-foo_nufft->sb[0])
-    //                   +t2*(foo_nufft->output_grid[1][j]-foo_nufft->sb[1])*(foo_nufft->output_grid[1][j]-foo_nufft->sb[1])
-    //                   +t3*(foo_nufft->output_grid[2][j]-foo_nufft->sb[2])*(foo_nufft->output_grid[2][j]-foo_nufft->sb[2])));
-    helper = (std::exp(t1*(foo_nufft->output_grid[0][j]-foo_nufft->sb[0])*(foo_nufft->output_grid[0][j]-foo_nufft->sb[0])
-                       +t2*(foo_nufft->output_grid[1][j]-foo_nufft->sb[1])*(foo_nufft->output_grid[1][j]-foo_nufft->sb[1])
-                       +t3*(foo_nufft->output_grid[2][j]-foo_nufft->sb[2])*(foo_nufft->output_grid[2][j]-foo_nufft->sb[2])))*helper;
-    double ang = (foo_nufft->output_grid[0][j]-foo_nufft->sb[0])*foo_nufft->xb[0] +
-                 (foo_nufft->output_grid[1][j]-foo_nufft->sb[1])*foo_nufft->xb[1] +
-                 (foo_nufft->output_grid[2][j]-foo_nufft->sb[2])*foo_nufft->xb[2];
-    std::complex<double> dummy(std::cos(ang),std::sin(ang));
-    helper = dummy * helper;
+    for (types::global_dof_index j_it=r.begin(); j_it<r.end(); ++j_it)
+      {
+        types::global_dof_index j=output_set.nth_index_in_set(j_it);
+        std::complex<double> helper(output_vector[2*j],output_vector[2*j+1]);
+        // std::cout<<helper<<" ";
+        // double foo = (std::exp(t1*(foo_nufft->output_grid[0][j]-foo_nufft->sb[0])*(foo_nufft->output_grid[0][j]-foo_nufft->sb[0])
+        //                   +t2*(foo_nufft->output_grid[1][j]-foo_nufft->sb[1])*(foo_nufft->output_grid[1][j]-foo_nufft->sb[1])
+        //                   +t3*(foo_nufft->output_grid[2][j]-foo_nufft->sb[2])*(foo_nufft->output_grid[2][j]-foo_nufft->sb[2])));
+        helper = (std::exp(t1*(output_grid[0][j]-sb[0])*(output_grid[0][j]-sb[0])
+                           +t2*(output_grid[1][j]-sb[1])*(output_grid[1][j]-sb[1])
+                           +t3*(output_grid[2][j]-sb[2])*(output_grid[2][j]-sb[2])))*helper;
+        double ang = (output_grid[0][j]-sb[0])*xb[0] +
+                     (output_grid[1][j]-sb[1])*xb[1] +
+                     (output_grid[2][j]-sb[2])*xb[2];
+        std::complex<double> dummy(std::cos(ang),std::sin(ang));
+        helper = dummy * helper;
 
 
-    output_vector_copy[2*j] = helper.real();
-    output_vector_copy[2*j+1] = helper.imag();
+        output_vector[2*j] = helper.real();
+        output_vector[2*j+1] = helper.imag();
+      }
   };
 
-  Threads::TaskGroup<> scaling_output_gridding_group;
   // We need to deconvolve the output array so we use output_set.
-  for (auto j_it=output_set.begin(); j_it!=output_set.end(); ++j_it)
-    {
-      scaling_output_gridding_group += Threads::new_task ( static_cast<void (*)(IndexSet::ElementIterator, double, double, double, std::vector<double> &, const BlackNUFFT *)> (f_scaling_output_gridding), j_it, t1, t2, t3, output_vector, this);
-    }
-  scaling_output_gridding_group.join_all();
+  tbb::parallel_for(blocked_range<unsigned int> (0, output_set.n_elements(),10), f_scaling_output_gridding_tbb);
+
+
+
+  // Old implementation using TaskGroup.
+  // auto f_scaling_output_gridding = [] (IndexSet::ElementIterator j_it, double t1, double t2, double t3, std::vector<double> &output_vector_copy, const BlackNUFFT *foo_nufft)
+  // {
+  //   types::global_dof_index j=*j_it;
+  //   std::complex<double> helper(output_vector_copy[2*j],output_vector_copy[2*j+1]);
+  //   // std::cout<<helper<<" ";
+  //   // double foo = (std::exp(t1*(foo_nufft->output_grid[0][j]-foo_nufft->sb[0])*(foo_nufft->output_grid[0][j]-foo_nufft->sb[0])
+  //   //                   +t2*(foo_nufft->output_grid[1][j]-foo_nufft->sb[1])*(foo_nufft->output_grid[1][j]-foo_nufft->sb[1])
+  //   //                   +t3*(foo_nufft->output_grid[2][j]-foo_nufft->sb[2])*(foo_nufft->output_grid[2][j]-foo_nufft->sb[2])));
+  //   helper = (std::exp(t1*(foo_nufft->output_grid[0][j]-foo_nufft->sb[0])*(foo_nufft->output_grid[0][j]-foo_nufft->sb[0])
+  //                      +t2*(foo_nufft->output_grid[1][j]-foo_nufft->sb[1])*(foo_nufft->output_grid[1][j]-foo_nufft->sb[1])
+  //                      +t3*(foo_nufft->output_grid[2][j]-foo_nufft->sb[2])*(foo_nufft->output_grid[2][j]-foo_nufft->sb[2])))*helper;
+  //   double ang = (foo_nufft->output_grid[0][j]-foo_nufft->sb[0])*foo_nufft->xb[0] +
+  //                (foo_nufft->output_grid[1][j]-foo_nufft->sb[1])*foo_nufft->xb[1] +
+  //                (foo_nufft->output_grid[2][j]-foo_nufft->sb[2])*foo_nufft->xb[2];
+  //   std::complex<double> dummy(std::cos(ang),std::sin(ang));
+  //   helper = dummy * helper;
+  //
+  //
+  //   output_vector_copy[2*j] = helper.real();
+  //   output_vector_copy[2*j+1] = helper.imag();
+  // };
+
+  // Threads::TaskGroup<> scaling_output_gridding_group;
+  //
+  // for (auto j_it=output_set.begin(); j_it!=output_set.end(); ++j_it)
+  //   {
+  //     scaling_output_gridding_group += Threads::new_task ( static_cast<void (*)(IndexSet::ElementIterator, double, double, double, std::vector<double> &, const BlackNUFFT *)> (f_scaling_output_gridding), j_it, t1, t2, t3, output_vector, this);
+  //   }
+  // scaling_output_gridding_group.join_all();
 
   // Finally we perform a AlltoAll Reduction to recover the complet
   // vector to be returned.
