@@ -1056,7 +1056,7 @@ void BlackNUFFT::compute_fft_3d()
     {
       fftw_init_threads();
       pcout<<"nsdaiiadn "<<Threads::n_existing_threads()<<std::endl;
-      fftw_plan_with_nthreads(Threads::n_existing_threads());
+      fftw_plan_with_nthreads(MultithreadInfo::n_threads());
       fftw_plan p;
       fftw_complex *dummy;
 
