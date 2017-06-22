@@ -1054,6 +1054,9 @@ void BlackNUFFT::compute_fft_3d()
   TimerOutput::Scope t(computing_timer, " 3D FFTW ");
   if (fft_type == "FFTW")
     {
+      fftw_init_threads();
+      pcout<<"nsdaiiadn "<<Threads::n_existing_threads()<<std::endl;
+      fftw_plan_with_nthreads(Threads::n_existing_threads());
       fftw_plan p;
       fftw_complex *dummy;
 
@@ -1348,7 +1351,7 @@ void BlackNUFFT::fast_gaussian_gridding_on_output()
   FGGScratch foo_scratch;
   FGGCopy foo_copy;
   // output_set=complete_index_set(nk);
-
+  // METTERE PARALLEL FOR
   WorkStream::run(output_set.begin(), output_set.end(), f_fgg_worker, f_fgg_copier, foo_scratch, foo_copy);
 
 }
