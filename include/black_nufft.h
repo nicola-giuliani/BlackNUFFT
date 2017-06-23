@@ -1,3 +1,16 @@
+//-----------------------------------------------------------
+//
+//    Copyright (C) 2017 by Nicola Giuliani
+//
+//    This file is subject to GPL and may not be distributed
+//    without copyright and license information. Please refer
+//    to the file BlackNUFFT/LICENSE for the  text  and
+//    further information on this license.
+//
+//-----------------------------------------------------------
+
+
+
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/parallel_vector.h>
 

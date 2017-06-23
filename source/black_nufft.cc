@@ -1454,13 +1454,13 @@ void BlackNUFFT::fast_gaussian_gridding_on_output()
               }
           }
 
-        }
+      }
 
-      };
+  };
 
-    tbb::parallel_for(blocked_range<unsigned int> (0, output_set.n_elements(),10), f_fgg_tbb);
+  tbb::parallel_for(blocked_range<unsigned int> (0, output_set.n_elements(),10), f_fgg_tbb);
 
-    // WorkStream::run(output_set.begin(), output_set.end(), f_fgg_worker, f_fgg_copier, foo_scratch, foo_copy);
+  // WorkStream::run(output_set.begin(), output_set.end(), f_fgg_worker, f_fgg_copier, foo_scratch, foo_copy);
 
 }
 
