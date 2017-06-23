@@ -1,0 +1,57 @@
+4 0
+4 3
+4 2
+Using FGG as gridding tool and FFTW as backend FFT library
+4 1
+ Input work Balance : 177801 elements over 2097152
+ Output work Balance : 481053 elements over 2097152
+nsdaiiadn 1
+FORWARD FFT
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |       142s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| 3D FFTW                         |         1 |      85.5s |        60% |
+| Compute Ranges                  |         1 |     0.013s |         0% |
+| Computing IndexSets             |         1 |      5.61s |         4% |
+| Deconvolution Before FFT        |         1 |      11.1s |       7.9% |
+| Deconvolution after FFT         |         1 |    0.0968s |         0% |
+| Fast Gaussian Gridding on Inputs|         1 |      20.5s |        14% |
+| Fast Guassian Gridding on Output|         1 |      11.9s |       8.4% |
+| Input Gridding                  |         1 |      31.6s |        22% |
+| Output Gridding                 |         1 |        12s |       8.5% |
+| Shift Data for FFTW3D           |         1 |      6.78s |       4.8% |
+| Tolerance Infos                 |         1 |  0.000111s |         0% |
++---------------------------------+-----------+------------+------------+
+
+4 1
+4 3
+4 0
+Using FGG as gridding tool and FFTW as backend FFT library
+4 2
+ Input work Balance : 177801 elements over 2097152
+ Output work Balance : 486600 elements over 2097152
+FORWARD FFT
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      45.5s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| 3D FFTW                         |         1 |      7.71s |        17% |
+| Compute Ranges                  |         1 |    0.0142s |         0% |
+| Computing IndexSets             |         1 |      1.26s |       2.8% |
+| Deconvolution Before FFT        |         1 |      1.38s |         3% |
+| Deconvolution after FFT         |         1 |    0.0995s |      0.22% |
+| Fast Gaussian Gridding on Inputs|         1 |      21.2s |        47% |
+| Fast Guassian Gridding on Output|         1 |      12.9s |        28% |
+| Input Gridding                  |         1 |      22.5s |        50% |
+| Output Gridding                 |         1 |        13s |        29% |
+| Shift Data for FFTW3D           |         1 |     0.964s |       2.1% |
+| Tolerance Infos                 |         1 |  9.51e-05s |         0% |
++---------------------------------+-----------+------------+------------+
+

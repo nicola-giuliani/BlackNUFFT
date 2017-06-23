@@ -1,0 +1,38 @@
+1 0
+Using FGG as gridding tool and FFTW as backend FFT library
+-------------------------------------------------------
+Primary job  terminated normally, but 1 process returned
+a non-zero exit code.. Per user-direction, the job has been aborted.
+-------------------------------------------------------
+--------------------------------------------------------------------------
+mpirun detected that one or more processes exited with non-zero status, thus causing
+the job to be terminated. The first process to do so was:
+
+  Process name: [[63882,1],0]
+  Exit code:    1
+--------------------------------------------------------------------------
+1 0
+Using FGG as gridding tool and FFTW as backend FFT library
+ Input work Balance : 2097152 elements over 2097152
+ Output work Balance : 2097152 elements over 2097152
+FORWARD FFT
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |       126s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| 3D FFTW                         |         1 |      16.1s |        13% |
+| Compute Ranges                  |         1 |    0.0136s |         0% |
+| Computing IndexSets             |         1 |      3.46s |       2.8% |
+| Deconvolution Before FFT        |         1 |      3.01s |       2.4% |
+| Deconvolution after FFT         |         1 |      0.19s |      0.15% |
+| Fast Gaussian Gridding on Inputs|         1 |      55.7s |        44% |
+| Fast Guassian Gridding on Output|         1 |      44.4s |        35% |
+| Input Gridding                  |         1 |      58.7s |        47% |
+| Output Gridding                 |         1 |      44.6s |        35% |
+| Shift Data for FFTW3D           |         1 |      2.87s |       2.3% |
+| Tolerance Infos                 |         1 |   7.1e-05s |         0% |
++---------------------------------+-----------+------------+------------+
+
