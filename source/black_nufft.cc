@@ -54,7 +54,7 @@ BlackNUFFT::BlackNUFFT(const std::vector<std::vector<double> > &in_grid, const s
 // A simple initialiser that resizes the grid parameters and the number of points.
 // We have put an Assert to check that the requested tolerance is right.
 
-void BlackNUFFT::init_nufft(double eps, bool fft_bool, std::string gridding_input, std::string fft_input)
+void BlackNUFFT::init_nufft(double eps, bool fft_bool, unsigned int tbb_granularity_in, std::string gridding_input, std::string fft_input)
 {
   TimerOutput::Scope t(computing_timer, " Initialisation ");
   nj = input_grid[0].size();
@@ -68,6 +68,7 @@ void BlackNUFFT::init_nufft(double eps, bool fft_bool, std::string gridding_inpu
   fft_backward = fft_bool;
   gridding = gridding_input;
   fft_type = fft_input;
+  tbb_granularity = tbb_granularity_in;
   pcout<<"Using "<<gridding<<" as gridding tool and "<<fft_type<<" as backend FFT library"<<std::endl;
 }
 
@@ -1054,6 +1055,9 @@ void BlackNUFFT::compute_fft_3d()
   TimerOutput::Scope t(computing_timer, " 3D FFTW ");
   if (fft_type == "FFTW")
     {
+      fftw_init_threads();
+      // pcout<<"nsdaiiadn "<<Threads::n_existing_threads()<<std::endl;
+      fftw_plan_with_nthreads(MultithreadInfo::n_threads());
       fftw_plan p;
       fftw_complex *dummy;
 
@@ -1348,8 +1352,116 @@ void BlackNUFFT::fast_gaussian_gridding_on_output()
   FGGScratch foo_scratch;
   FGGCopy foo_copy;
   // output_set=complete_index_set(nk);
+  // METTERE PARALLEL FOR
 
-  WorkStream::run(output_set.begin(), output_set.end(), f_fgg_worker, f_fgg_copier, foo_scratch, foo_copy);
+  auto f_fgg_tbb = [this,t1,t2,t3] (blocked_range<unsigned int> r)
+  {
+    for (types::global_dof_index j_it = r.begin(); j_it<r.end(); ++j_it)
+      {
+        types::global_dof_index j=output_set.nth_index_in_set(j_it);
+        // Vectors needed for the precomputations along the three dimensions. In principle they
+        // belong here but in maybe in the copier they perform better.
+        Vector<double> xc(2*nspread), yc(2*nspread), zc(2*nspread);
+
+        types::global_dof_index kb1 = types::global_dof_index(double(nf1/2) + (output_grid[0][j]-sb[0])/hs);
+        types::global_dof_index kb2 = types::global_dof_index(double(nf2/2) + (output_grid[1][j]-sb[1])/ht);
+        types::global_dof_index kb3 = types::global_dof_index(double(nf3/2) + (output_grid[2][j]-sb[2])/hu);
+
+        double diff1 = double(nf1/2) + (output_grid[0][j]-sb[0])/hs - kb1;
+        double diff2 = double(nf2/2) + (output_grid[1][j]-sb[1])/ht - kb2;
+        double diff3 = double(nf3/2) + (output_grid[2][j]-sb[2])/hu - kb3;
+
+        // if(j==0)
+        //   std::cout<<hu<<" "<<(output_grid[2][j]-sb[2])/hu<<" "<<nf3/2<<std::endl;
+        // ang = (sk(j)-sb)*xb + (tk(j)-tb)*yb + (uk(j)-ub)*zb
+        // copy_data.ang = sb[0]*input_grid[0][j] + sb[1]*input_grid[1][j] + sb[2]*input_grid[2][j];
+        // copy_data.ang = (-sb[0]+output_grid[0][j])*xb[0] + (-sb[1]+output_grid[1][j])*xb[1] + (-sb[2]+output_grid[2][j])*xb[2];
+        double ang = xb[0]*output_grid[0][j] + xb[1]*output_grid[1][j] + xb[2]*output_grid[2][j];
+        std::complex<double> dummy1(std::cos(ang), std::sin(ang));
+        std::complex<double> dummy2(output_vector[2*j], output_vector[2*j+1]);
+        std::complex<double> cs = dummy1 * dummy2;
+        //  if(j==3)
+        //   std::cout<<diff1<<" "<<diff2<<" "<<diff3<<" "<<jb1<<" "<<jb2<<" "<<jb3<<" "<<ang<<std::endl;
+        // 2) We precompute everything along x. Fast Gaussian Gridding
+        // 2a) Precomptaiton in x
+        // The original loop was -nspread+1 : nspread
+        xc[nspread-1] = std::exp(-t1*diff1*diff1
+                                 -t2*diff2*diff2
+                                 -t3*diff3*diff3);
+
+        double cross = xc[nspread-1];
+        double cross1 = exp(2.*t1 * diff1);
+        for (unsigned int k1 = 0; k1 < nspread; ++k1)
+          {
+            cross = cross * cross1;
+            xc[nspread+k1] = xexp[k1]*cross;
+            // if(j==0)
+            //   std::cout<<xc[nspread+k1]<<" "<<k1+1<<std::endl;
+          }
+        cross = xc[nspread-1];
+        cross1 = 1./cross1;
+        for (unsigned int k1 = 0; k1 < nspread-1; ++k1) // Precomputing everything Watch out for negative indices.
+          {
+            cross = cross * cross1;
+            xc[nspread-k1-2] = xexp[k1]*cross;
+            // if(j==0)
+            //   std::cout<<xc[nspread-k1-2]<<" "<<-(int)k1-1<<std::endl;
+
+          }
+        // 2b) Precomptaiton in y
+        yc[nspread-1] = 1.;
+        cross = std::exp(2.*t2 * diff2);
+        cross1 = cross;
+        for (unsigned int k2 = 0; k2 < nspread-1; ++k2) //k2 = 1, nspread-1
+          {
+            yc[nspread + k2] = yexp[k2]*cross;
+            yc[nspread-2-k2] = yexp[k2]/cross;
+            cross = cross * cross1;
+          }
+        yc[2*nspread-1] = yexp[nspread-1]*cross;
+        // 2c) Precomptaiton in z
+        zc[nspread-1] = 1.;
+        cross = std::exp(2.*t3 * diff3);
+        cross1 = cross;
+        for (unsigned int k3 = 0; k3 < nspread-1; ++k3)
+          {
+            zc[nspread + k3] = zexp[k3]*cross;
+            zc[nspread-2-k3] = zexp[k3]/cross;
+            cross = cross * cross1;
+          }
+        zc[2*nspread-1] = zexp[nspread-1]*cross;
+        // 2d) we must put everything together (VERY EXPENSIVE TBB)
+        // We have found the nearest point, we use the gaussian gridding centered on that point
+        // and we use all the precomputed stuff to compute the exponential.
+        // copy_data.j = j;
+        for (unsigned int k3 = 0; k3<2*nspread; ++k3)
+          {
+            for (unsigned int k2 = 0; k2<2*nspread; ++k2)
+              {
+                types::global_dof_index ii = kb1 + (kb2+k2-(nspread-1)) * nf1 + (kb3+k3-(nspread-1)) * nf1 * nf2;
+                cross = yc[k2] * zc[k3];
+                for (unsigned int k1 = 0; k1<2*nspread; ++k1)
+                  {
+                    types::global_dof_index is2 = 2*(ii+k1-(nspread-1));
+                    std::complex<double> zz(fine_grid_data[is2],fine_grid_data[is2+1]);//-1 as always FORTRAN->C++
+                    output_vector[2*j] +=  (xc[k1] * cross) * zz.real();
+                    output_vector[2*j+1] += (xc[k1] * cross) * zz.imag();
+
+                    // if(j == 2)
+                    //   std::cout<<std::endl<<"second gridding "<<output_vector[2*j]<<" "<<output_vector[2*j+1]
+                    //   <<" "<<(int)k3-(int)(nspread-1)<<" "<<cross<<" "<<is2<<" "<<zz<<" "<<fine_grid_data[is2-1]<<std::endl;
+
+                  }
+              }
+          }
+
+      }
+
+  };
+
+  tbb::parallel_for(blocked_range<unsigned int> (0, output_set.n_elements(),10), f_fgg_tbb);
+
+  // WorkStream::run(output_set.begin(), output_set.end(), f_fgg_worker, f_fgg_copier, foo_scratch, foo_copy);
 
 }
 

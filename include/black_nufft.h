@@ -1,3 +1,16 @@
+//-----------------------------------------------------------
+//
+//    Copyright (C) 2017 by Nicola Giuliani
+//
+//    This file is subject to GPL and may not be distributed
+//    without copyright and license information. Please refer
+//    to the file BlackNUFFT/LICENSE for the  text  and
+//    further information on this license.
+//
+//-----------------------------------------------------------
+
+
+
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/parallel_vector.h>
 
@@ -38,7 +51,7 @@ public:
 
   /** Class constructor, we need the input - output grids and the relative vectors. We require
   an MPI communicator to set up the distributed fine grid vector. By default we consider MPI_COMM_WORLD*/
-  void init_nufft(double eps, bool fft_bool, std::string gridding_input="FGG", std::string fft_input="FFTW");
+  void init_nufft(double eps, bool fft_bool, unsigned int tbb_granularity_in=10, std::string gridding_input="FGG", std::string fft_input="FFTW");
 
   /** The driver of the function. It calls all the needed function of the private part*/
   void run();
@@ -170,6 +183,8 @@ private:
 
   parallel::distributed::Vector<double> fine_grid_data;
 
+  /// Granularity for tbb parallel fors
+  unsigned int tbb_granularity;
 
   /// The spread of the gaussian convolution
   unsigned int nspread;
