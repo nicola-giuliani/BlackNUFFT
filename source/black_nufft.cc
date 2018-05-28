@@ -1,6 +1,7 @@
 #include "black_nufft.h"
 #include "fftw3.h"
 #include "fftw3-mpi.h"
+#include <pfft.h>
 #include <deal.II/base/exceptions.h>
 
 using namespace tbb;
