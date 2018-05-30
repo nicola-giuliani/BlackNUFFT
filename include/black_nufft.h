@@ -169,6 +169,11 @@ private:
 
   types::global_dof_index nf1, nf2, nf3;
 
+  ptrdiff_t input_offset[3], output_offset[3];
+  ptrdiff_t local_i_start[3], local_ni[3];
+  ptrdiff_t local_o_start[3], local_no[3];
+  ptrdiff_t local_n[3], ni[3], no[3], complete_n[3];
+
   types::global_dof_index local_nf3, local_nf3_start;
 
   double r2lamb1, r2lamb2, r2lamb3;
@@ -177,11 +182,11 @@ private:
 
   Vector<double> deconv_array_x, deconv_array_y, deconv_array_z;
 
-  IndexSet input_set, output_set, fftw3_set, fftw3_output_set;
+  IndexSet input_set, output_set, fftw3_set, fftw3_output_set, pfft_input_set, pfft_output_set;
 
   std::vector<std::vector<IndexSet> > grid_sets;
 
-  parallel::distributed::Vector<double> fine_grid_data;
+  parallel::distributed::Vector<double> fine_grid_data, grid_data_input, grid_data_output;
 
   /// Granularity for tbb parallel fors
   unsigned int tbb_granularity;
@@ -200,7 +205,7 @@ private:
   /// Three vectors to store the precomputation of the exponentials.
   Vector<double> xexp, yexp, zexp;
 
-  MPI_Comm mpi_communicator;
+  MPI_Comm mpi_communicator, comm_cart_2d;
 
   unsigned int n_mpi_processes, this_mpi_process;
 
