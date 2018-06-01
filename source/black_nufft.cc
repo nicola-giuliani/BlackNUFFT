@@ -119,9 +119,9 @@ void BlackNUFFT::create_index_sets()
       input_set.set_size(nj);
       for (types::global_dof_index j=0; j<nj; ++j)
         {
-          auto jb1 = types::global_dof_index(double(nf1/2) + (input_grid[0][j]-xb[0])/hx);
-          auto jb2 = types::global_dof_index(double(nf2/2) + (input_grid[1][j]-xb[1])/hy);
-          auto jb3 = types::global_dof_index(double(nf3/2) + (input_grid[2][j]-xb[2])/hz);
+          auto jb1 = types::global_dof_index(double(nf1/2) + (input_grid[0][j]-xb[0])/hx - input_offset[0]);
+          auto jb2 = types::global_dof_index(double(nf2/2) + (input_grid[1][j]-xb[1])/hy - input_offset[1]);
+          auto jb3 = types::global_dof_index(double(nf3/2) + (input_grid[2][j]-xb[2])/hz - input_offset[2]);
           if (fftw3_set.is_element(2 * (jb1 + jb2*nf1 + jb3*nf1*nf2)))
             {
               input_set.add_index(j);
@@ -198,9 +198,9 @@ void BlackNUFFT::create_index_sets()
     input_set.set_size(nj);
     for (types::global_dof_index j=0; j<nj; ++j)
       {
-        auto jb1 = types::global_dof_index(double(nf1/2) + (input_grid[0][j]-xb[0])/hx);
-        auto jb2 = types::global_dof_index(double(nf2/2) + (input_grid[1][j]-xb[1])/hy);
-        auto jb3 = types::global_dof_index(double(nf3/2) + (input_grid[2][j]-xb[2])/hz);
+        auto jb1 = types::global_dof_index(double(nf1/2) + (input_grid[0][j]-xb[0])/hx - input_offset[0]);
+        auto jb2 = types::global_dof_index(double(nf2/2) + (input_grid[1][j]-xb[1])/hy - input_offset[1]);
+        auto jb3 = types::global_dof_index(double(nf3/2) + (input_grid[2][j]-xb[2])/hz - input_offset[2]);
         if (pfft_input_set.is_element(2 * (jb1 + jb2*local_ni[1] + jb3*nf1*nf2)))
           {
             input_set.add_index(j);
@@ -219,9 +219,9 @@ void BlackNUFFT::create_index_sets()
   output_set.set_size(nk);
   for (types::global_dof_index k=0; k<nk; ++k)
     {
-      auto kb1 = types::global_dof_index(double(nf1/2) + (output_grid[0][k]-sb[0])/hs);
-      auto kb2 = types::global_dof_index(double(nf2/2) + (output_grid[1][k]-sb[1])/ht);
-      auto kb3 = types::global_dof_index(double(nf3/2) + (output_grid[2][k]-sb[2])/hu);
+      auto kb1 = types::global_dof_index(double(nf1/2) + (output_grid[0][k]-sb[0])/hs - output_offset[0]);
+      auto kb2 = types::global_dof_index(double(nf2/2) + (output_grid[1][k]-sb[1])/ht - output_offset[1]);
+      auto kb3 = types::global_dof_index(double(nf3/2) + (output_grid[2][k]-sb[2])/hu - output_offset[2]);
 
       if (pfft_output_set.is_element((kb1+kb2*nf1+kb3*nf1*nf2)*2))
         {
@@ -296,9 +296,9 @@ void BlackNUFFT::create_index_sets_for_first_gridding(const unsigned int sets_nu
       }
   for (auto j : input_set)
     {
-      auto jb1 = types::global_dof_index(double(nf1/2) + (input_grid[0][j]-xb[0])/hx);
-      auto jb2 = types::global_dof_index(double(nf2/2) + (input_grid[1][j]-xb[1])/hy);
-      auto jb3 = types::global_dof_index(double(nf3/2) + (input_grid[2][j]-xb[2])/hz);
+      auto jb1 = types::global_dof_index(double(nf1/2) + (input_grid[0][j]-xb[0])/hx - input_offset[0]);
+      auto jb2 = types::global_dof_index(double(nf2/2) + (input_grid[1][j]-xb[1])/hy - input_offset[1]);
+      auto jb3 = types::global_dof_index(double(nf3/2) + (input_grid[2][j]-xb[2])/hz - input_offset[2]);
       for (types::global_dof_index jj=0; jj<helper[0].size(); ++jj)
         if (helper[0][jj].is_element(2 * (jb1 + jb2*nf1 + jb3*nf1*nf2)))
           {
@@ -577,9 +577,9 @@ void BlackNUFFT::fast_gaussian_gridding_on_input()
     Vector<double> xc(2*nspread), yc(2*nspread), zc(2*nspread);
     Vector<double> local_fine_grid_data(2*2*nspread*2*nspread*2*nspread);
 
-    types::global_dof_index jb1 = types::global_dof_index(double(nf1/2) + (input_grid[0][j]-xb[0])/hx);
-    types::global_dof_index jb2 = types::global_dof_index(double(nf2/2) + (input_grid[1][j]-xb[1])/hy);
-    types::global_dof_index jb3 = types::global_dof_index(double(nf3/2) + (input_grid[2][j]-xb[2])/hz);
+    types::global_dof_index jb1 = types::global_dof_index(double(nf1/2) + (input_grid[0][j]-xb[0])/hx - input_offset[0]);
+    types::global_dof_index jb2 = types::global_dof_index(double(nf2/2) + (input_grid[1][j]-xb[1])/hy - input_offset[1]);
+    types::global_dof_index jb3 = types::global_dof_index(double(nf3/2) + (input_grid[2][j]-xb[2])/hz - input_offset[2]);
     double diff1 = double(nf1/2) + (input_grid[0][j]-xb[0])/hx - jb1;
     double diff2 = double(nf2/2) + (input_grid[1][j]-xb[1])/hy - jb2;
     double diff3 = double(nf3/2) + (input_grid[2][j]-xb[2])/hz - jb3;
@@ -1370,9 +1370,9 @@ void BlackNUFFT::fast_gaussian_gridding_on_output()
     // belong here but in maybe in the copier they perform better.
     Vector<double> xc(2*nspread), yc(2*nspread), zc(2*nspread);
 
-    copy_data.kb1 = types::global_dof_index(double(nf1/2) + (output_grid[0][j]-sb[0])/hs);
-    copy_data.kb2 = types::global_dof_index(double(nf2/2) + (output_grid[1][j]-sb[1])/ht);
-    copy_data.kb3 = types::global_dof_index(double(nf3/2) + (output_grid[2][j]-sb[2])/hu);
+    copy_data.kb1 = types::global_dof_index(double(nf1/2) + (output_grid[0][j]-sb[0])/hs - output_offset[0]);
+    copy_data.kb2 = types::global_dof_index(double(nf2/2) + (output_grid[1][j]-sb[1])/ht - output_offset[1]);
+    copy_data.kb3 = types::global_dof_index(double(nf3/2) + (output_grid[2][j]-sb[2])/hu - output_offset[2]);
 
     copy_data.diff1 = double(nf1/2) + (output_grid[0][j]-sb[0])/hs - copy_data.kb1;
     copy_data.diff2 = double(nf2/2) + (output_grid[1][j]-sb[1])/ht - copy_data.kb2;
@@ -1492,9 +1492,9 @@ void BlackNUFFT::fast_gaussian_gridding_on_output()
         // belong here but in maybe in the copier they perform better.
         Vector<double> xc(2*nspread), yc(2*nspread), zc(2*nspread);
 
-        types::global_dof_index kb1 = types::global_dof_index(double(nf1/2) + (output_grid[0][j]-sb[0])/hs);
-        types::global_dof_index kb2 = types::global_dof_index(double(nf2/2) + (output_grid[1][j]-sb[1])/ht);
-        types::global_dof_index kb3 = types::global_dof_index(double(nf3/2) + (output_grid[2][j]-sb[2])/hu);
+        types::global_dof_index kb1 = types::global_dof_index(double(nf1/2) + (output_grid[0][j]-sb[0])/hs - output_offset[0]);
+        types::global_dof_index kb2 = types::global_dof_index(double(nf2/2) + (output_grid[1][j]-sb[1])/ht - output_offset[1]);
+        types::global_dof_index kb3 = types::global_dof_index(double(nf3/2) + (output_grid[2][j]-sb[2])/hu - output_offset[2]);
 
         double diff1 = double(nf1/2) + (output_grid[0][j]-sb[0])/hs - kb1;
         double diff2 = double(nf2/2) + (output_grid[1][j]-sb[1])/ht - kb2;
