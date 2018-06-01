@@ -113,6 +113,7 @@ void create_initial_data(types::global_dof_index &nj, types::global_dof_index &n
   // types::signed_global_dof_index ms = nk/3;
   // types::signed_global_dof_index mt = nk/3;
   // types::signed_global_dof_index mu = nk/3;
+  std::cout<<"Creating initial data"<<std::endl;
   types::signed_global_dof_index n1 = (types::signed_global_dof_index)std::cbrt(nj);
   types::signed_global_dof_index n2 = (types::signed_global_dof_index)std::cbrt(nj);
   types::signed_global_dof_index n3 = (types::signed_global_dof_index)std::cbrt(nj);
@@ -270,7 +271,7 @@ int main(int argc, char *argv[])
     }
   std::cout<<Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)<<" "<<Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)<<std::endl;
   BlackNUFFT my_nufft(in_grid_ptr, in_vec_ptr, out_grid_ptr, out_vec_ptr);
-  my_nufft.init_nufft(epsilon, iflag, 10);
+  my_nufft.init_nufft(epsilon, iflag, 10,"FGG","PFFT");
 
   // my_nufft.test_data.reinit(40*40*40*2);//test for eps=1e-4
   // my_nufft.test_data_before.reinit(80*80*80*2);//test for eps=1e-4
