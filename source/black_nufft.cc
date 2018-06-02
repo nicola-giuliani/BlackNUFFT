@@ -134,7 +134,7 @@ void BlackNUFFT::create_index_sets()
       fft_output_set = fftw3_set;
 
       fine_grid_data.reinit(fftw3_set, fftw3_output_set, mpi_communicator);
-
+      input_grid_helper = &fine_grid_data;
       // We create the input set associated with the set needed by fftw 3d.
       input_set.set_size(nj);
       for (types::global_dof_index j=0; j<nj; ++j)
@@ -177,7 +177,7 @@ void BlackNUFFT::create_index_sets()
         local_ni, local_i_start, local_no, local_o_start);
     for(unsigned int i=0; i<3; ++i)
       std::cout<<"POST "<<ni[i]<<" "<<local_ni[i]<<" "<<local_i_start[i]<<" "<<no[i]<<" "<<local_no[i]<<" "<<local_o_start[i]<<" "<<std::endl;
-   
+
     // // fftw_mpi_local_size_3d(nf3, nf2, nf1, mpi_communicator, &tmp_local_nf3, &tmp_local_i_start[2]);
     // local_nf3 = (types::global_dof_index) tmp_local_nf3;
     // local_i_start[2] = (types::global_dof_index) tmp_local_i_start[2];
@@ -222,6 +222,7 @@ void BlackNUFFT::create_index_sets()
     // std::cout<<this_mpi_process<<" OK"<<std::endl;
 
     grid_data_input.reinit(pfft_input_set, comm_cart_2d);
+    input_grid_helper = &grid_data_input;
     fine_grid_data.reinit(fft_output_set, pfft_output_set, comm_cart_2d);//grid_data_output
     // fine_grid_data.reinit(fftw3_set, fftw3_output_set, mpi_communicator);
 
@@ -468,7 +469,7 @@ void BlackNUFFT::compute_tolerance_infos()
     // pcout<<fft_type<<std::endl;
     if(fft_type=="FFTW")
     {
- 
+
       input_offset[0] = 0;
       input_offset[1] = 0;
       input_offset[2] = 0;
@@ -505,7 +506,7 @@ void BlackNUFFT::compute_tolerance_infos()
       no[2] = int(double(nf1/2) + (sm[0]+sb[0])/hs) - output_offset[0] + 1;
       no[1] = int(double(nf2/2) + (sm[1]+sb[1])/ht) - output_offset[1] + 1;
       no[0] = int(double(nf3/2) + (sm[2]+sb[2])/hu) - output_offset[2] + 1;
-      
+
       pcout<<input_offset[2]<<" "<<input_offset[1]<<" "<<input_offset[0]<<std::endl;
       pcout<<ni[2]<<" "<<ni[1]<<" "<<ni[0]<<std::endl;
       pcout<<output_offset[2]<<" "<<output_offset[1]<<" "<<output_offset[0]<<std::endl;
@@ -713,7 +714,7 @@ void BlackNUFFT::fast_gaussian_gridding_on_input()
           {
             std::complex<double> cc;
             cc = yc[k2] * c2;
-            types::global_dof_index ii = jb1 + (jb2+k2-(nspread-1))*nf1 + (jb3+k3-(nspread-1))*nf1*nf2;
+            types::global_dof_index ii = jb1 + (jb2+k2-(nspread-1))*ni[2] + (jb3+k3-(nspread-1))*ni[2]*ni[1];
             for (unsigned int k1 = 0; k1<2*nspread; ++k1)
               {
                 types::global_dof_index istart = 2*(ii+((int)k1 - (int)(nspread-1)));
@@ -726,7 +727,7 @@ void BlackNUFFT::fast_gaussian_gridding_on_input()
           }
       }
 
-    if (fftw3_set.is_element(2 * (jb1 + jb2*nf1 + jb3*nf1*nf2)))
+    if (fft_input_set.is_element(2 * (jb1 + jb2*ni[2] + jb3*ni[2]*ni[1])))
       {
 
 
@@ -736,13 +737,13 @@ void BlackNUFFT::fast_gaussian_gridding_on_input()
             unsigned int local_index = 2*(k3*(2*nspread*2*nspread));
             for (unsigned int k2 = 0; k2<2*nspread; ++k2)
               {
-                types::global_dof_index ii = jb1 + (jb2+k2-(nspread-1))*nf1 + (jb3+k3-(nspread-1))*nf1*nf2;
+                types::global_dof_index ii = jb1 + (jb2+k2-(nspread-1))*ni[2] + (jb3+k3-(nspread-1))*ni[2]*ni[1];
 
                 for (unsigned int k1 = 0; k1<2*nspread; ++k1)
                   {
                     types::global_dof_index istart = 2*(ii+((int)k1 - (int)(nspread-1)));
-                    fine_grid_data[istart] += local_fine_grid_data[local_index];
-                    fine_grid_data[istart+1] += local_fine_grid_data[local_index+1];
+                    (*input_grid_helper)[istart] += local_fine_grid_data[local_index];
+                    (*input_grid_helper)[istart+1] += local_fine_grid_data[local_index+1];
                     local_index += 2;
                   }
               }
@@ -1023,9 +1024,9 @@ void BlackNUFFT::scaling_input_gridding()
         for (types::global_dof_index k1=0; k1<2*iw7+1; ++k1)
           {
             types::global_dof_index ii;
-            ii = ( nf1/2+k1- iw7) +
-                 ( nf2/2+k2- iw8)* nf1 +
-                 ( nf3/2)* nf1* nf2;
+            ii = ( ni[2]/2+k1- iw7) +
+                 ( ni[1]/2+k2- iw8)* ni[2] +
+                 ( ni[0]/2)* ni[2]* ni[0];
 
             double cross =  deconv_array_x[std::abs((types::signed_global_dof_index)k1-(types::signed_global_dof_index) iw7)] *
                             deconv_array_y[std::abs((types::signed_global_dof_index)k2-(types::signed_global_dof_index) iw8)];
@@ -1033,12 +1034,12 @@ void BlackNUFFT::scaling_input_gridding()
             std::complex<double> c2;
             std::complex<double> zz;
 
-            if ( fftw3_set.is_element(2*ii))
+            if ( fft_input_set.is_element(2*ii))
               {
-                c2 = std::complex<double>(fine_grid_data[2*ii],fine_grid_data[2*ii+1]);
+                c2 = std::complex<double>((*input_grid_helper)[2*ii],(*input_grid_helper)[2*ii+1]);
                 zz = (cross* deconv_array_z[0])*c2;
-                fine_grid_data[2*ii] = zz.real();
-                fine_grid_data[2*ii+1] = zz.imag();
+                (*input_grid_helper)[2*ii] = zz.real();
+                (*input_grid_helper)[2*ii+1] = zz.imag();
               }
 
             for (types::global_dof_index k3 = 1; k3 <=  iw9; ++k3)
@@ -1046,21 +1047,21 @@ void BlackNUFFT::scaling_input_gridding()
 
                 types::global_dof_index is2;
 
-                is2 = 2*(ii+k3* nf1* nf2);
+                is2 = 2*(ii+k3* ni[2]* ni[1]);
                 if ( fftw3_set.is_element(is2))
                   {
-                    c2 = std::complex<double>(fine_grid_data[is2],fine_grid_data[is2+1]);
+                    c2 = std::complex<double>((*input_grid_helper)[is2],(*input_grid_helper)[is2+1]);
                     zz = (cross* deconv_array_z[k3])*c2;
-                    fine_grid_data[is2] = zz.real();
-                    fine_grid_data[is2+1] = zz.imag();
+                    (*input_grid_helper)[is2] = zz.real();
+                    (*input_grid_helper)[is2+1] = zz.imag();
                   }
-                is2 = 2*(ii-k3* nf1* nf2);
-                if ( fftw3_set.is_element(is2))
+                is2 = 2*(ii-k3* ni[2]* ni[1]);
+                if ( fft_input_set.is_element(is2))
                   {
-                    c2 = std::complex<double>(fine_grid_data[is2],fine_grid_data[is2+1]);
+                    c2 = std::complex<double>((*input_grid_helper)[is2],(*input_grid_helper)[is2+1]);
                     zz = (cross* deconv_array_z[k3])*c2;
-                    fine_grid_data[is2] = zz.real();
-                    fine_grid_data[is2+1] = zz.imag();
+                    (*input_grid_helper)[is2] = zz.real();
+                    (*input_grid_helper)[is2+1] = zz.imag();
                   }
                 // std::cout<<is2<<" ";
               }
@@ -1276,49 +1277,46 @@ void BlackNUFFT::compute_fft_3d()
           p = fftw_mpi_plan_dft_3d(nf3, nf2, nf1, dummy, dummy, mpi_communicator, FFTW_BACKWARD, FFTW_ESTIMATE);
           fftw_execute(p);
           pcout<<"BACKWARD FFT"<<std::endl;
-          fftw_destroy_plan(p);
         }
       else
         {
           p = fftw_mpi_plan_dft_3d(nf3, nf2, nf1,dummy, dummy, mpi_communicator, FFTW_FORWARD, FFTW_ESTIMATE);
           fftw_execute(p);
           pcout<<"FORWARD FFT"<<std::endl;
-          fftw_destroy_plan(p);
 
         }
+        fftw_destroy_plan(p);
+
     }
   else if(fft_type == "PFFT")
   {
-      fftw_init_threads();
-      // pcout<<"nsdaiiadn "<<Threads::n_existing_threads()<<std::endl;
-      fftw_plan_with_nthreads(MultithreadInfo::n_threads());
-      fftw_plan p;
-      fftw_complex *dummy;
+    pfft_complex *in, *out;
+    pfft_plan pfft_plan=NULL;
 
-      // We need a cast to make FFTW accept the lacal double array as a complex one.
-      // We have taken care of compatibility before so we just need a cast.
-      dummy = reinterpret_cast<fftw_complex *> (&fine_grid_data.local_element(0));
+    in = reinterpret_cast<pfft_complex *> (&grid_data_input.local_element(0));
+    out = reinterpret_cast<pfft_complex *> (&fine_grid_data.local_element(0));
+    fine_grid_data.zero_out_ghosts();
 
-      // We don't need the ghost cells set up by the gridding anymore so we wipe them
-      // out.
-      fine_grid_data.zero_out_ghosts();
-      if (fft_backward)
-        {
-          p = fftw_mpi_plan_dft_3d(nf3, nf2, nf1, dummy, dummy, mpi_communicator, FFTW_BACKWARD, FFTW_ESTIMATE);
-          fftw_execute(p);
-          pcout<<"BACKWARD FFT"<<std::endl;
-          fftw_destroy_plan(p);
-        }
+
+    if (fft_backward)
+      {
+    pfft_plan = pfft_plan_many_dft(
+        3, n, ni, no, howmany, PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
+        in, out, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
+        pcout<<"BACKWARD PFFT"<<std::endl;
+        pfft_execute(pfft_plan);
+      }
       else
-        {
-          p = fftw_mpi_plan_dft_3d(nf3, nf2, nf1,dummy, dummy, mpi_communicator, FFTW_FORWARD, FFTW_ESTIMATE);
-          fftw_execute(p);
-          pcout<<"FORWARD FFT"<<std::endl;
-          fftw_destroy_plan(p);
+      {
+        pfft_plan = pfft_plan_many_dft(
+            3, n, ni, no, howmany, PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
+            in, out, comm_cart_2d, PFFT_FORWARD, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
+        pcout<<"FORWARD PFFT"<<std::endl;
+        pfft_execute(pfft_plan);
+      }
+      pfft_destroy_plan(pfft_plan);
 
-        }
-    
-  }
+    }
   else
     {
       AssertThrow(true, ExcNotImplemented());
