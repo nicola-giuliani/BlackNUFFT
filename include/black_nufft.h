@@ -182,7 +182,7 @@ private:
 
   Vector<double> deconv_array_x, deconv_array_y, deconv_array_z;
 
-  IndexSet input_set, output_set, fftw3_set, fftw3_output_set, pfft_input_set, pfft_output_set;
+  IndexSet input_set, output_set, fftw3_set, fftw3_output_set, pfft_input_set, pfft_output_set, fft_input_set, fft_output_set;
 
   std::vector<std::vector<IndexSet> > grid_sets;
 
