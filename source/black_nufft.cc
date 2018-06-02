@@ -222,7 +222,7 @@ void BlackNUFFT::create_index_sets()
     // std::cout<<this_mpi_process<<" OK"<<std::endl;
 
     grid_data_input.reinit(pfft_input_set, comm_cart_2d);
-    grid_data_output.reinit(fft_output_set, pfft_output_set, comm_cart_2d);
+    fine_grid_data.reinit(fft_output_set, pfft_output_set, comm_cart_2d);//grid_data_output
     // fine_grid_data.reinit(fftw3_set, fftw3_output_set, mpi_communicator);
 
     // We create the input set associated with the set needed by fftw 3d.
@@ -1287,6 +1287,38 @@ void BlackNUFFT::compute_fft_3d()
 
         }
     }
+  else if(fft_type == "PFFT")
+  {
+      fftw_init_threads();
+      // pcout<<"nsdaiiadn "<<Threads::n_existing_threads()<<std::endl;
+      fftw_plan_with_nthreads(MultithreadInfo::n_threads());
+      fftw_plan p;
+      fftw_complex *dummy;
+
+      // We need a cast to make FFTW accept the lacal double array as a complex one.
+      // We have taken care of compatibility before so we just need a cast.
+      dummy = reinterpret_cast<fftw_complex *> (&fine_grid_data.local_element(0));
+
+      // We don't need the ghost cells set up by the gridding anymore so we wipe them
+      // out.
+      fine_grid_data.zero_out_ghosts();
+      if (fft_backward)
+        {
+          p = fftw_mpi_plan_dft_3d(nf3, nf2, nf1, dummy, dummy, mpi_communicator, FFTW_BACKWARD, FFTW_ESTIMATE);
+          fftw_execute(p);
+          pcout<<"BACKWARD FFT"<<std::endl;
+          fftw_destroy_plan(p);
+        }
+      else
+        {
+          p = fftw_mpi_plan_dft_3d(nf3, nf2, nf1,dummy, dummy, mpi_communicator, FFTW_FORWARD, FFTW_ESTIMATE);
+          fftw_execute(p);
+          pcout<<"FORWARD FFT"<<std::endl;
+          fftw_destroy_plan(p);
+
+        }
+    
+  }
   else
     {
       AssertThrow(true, ExcNotImplemented());
