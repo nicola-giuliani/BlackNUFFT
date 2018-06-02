@@ -187,6 +187,7 @@ private:
   std::vector<std::vector<IndexSet> > grid_sets;
 
   parallel::distributed::Vector<double> fine_grid_data, grid_data_input, grid_data_output;
+  parallel::distributed::Vector<double> *input_grid_helper;
 
   /// Granularity for tbb parallel fors
   unsigned int tbb_granularity;
