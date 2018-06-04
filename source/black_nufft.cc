@@ -350,13 +350,13 @@ void BlackNUFFT::create_index_sets_for_first_gridding(const unsigned int sets_nu
       auto jb2 = types::global_dof_index(double(nf2/2) + (input_grid[1][j]-xb[1])/hy - input_offset[1]);
       auto jb3 = types::global_dof_index(double(nf3/2) + (input_grid[2][j]-xb[2])/hz - input_offset[2]);
       for (types::global_dof_index jj=0; jj<helper[0].size(); ++jj)
-        if (helper[0][jj].is_element(2 * (jb1 + jb2*nf1 + jb3*nf1*nf2)))
+        if (helper[0][jj].is_element(2 * (jb1 + jb2*ni[2] + jb3*ni[2]*ni[1])))
           {
             grid_sets[0][jj].add_index(j);
             break;
           }
       for (types::global_dof_index jj=0; jj<helper[0].size(); ++jj)
-        if (helper[1][jj].is_element(2 * (jb1 + jb2*nf1 + jb3*nf1*nf2)))
+        if (helper[1][jj].is_element(2 * (jb1 + jb2*ni[2] + jb3*ni[2]*ni[1])))
           {
             grid_sets[1][jj].add_index(j);
             break;
