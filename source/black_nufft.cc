@@ -246,8 +246,8 @@ void BlackNUFFT::create_index_sets()
       AssertThrow(true, ExcNotImplemented());
     }
   // We create the additional input sets needed by the accelerating version of the gridding.
-  fft_input_set.print(std::cout);
-  fft_output_set.print(std::cout);
+  // fft_input_set.print(std::cout);
+  // fft_output_set.print(std::cout);
   create_index_sets_for_first_gridding();
 
   output_set.set_size(nk);
@@ -301,8 +301,8 @@ void BlackNUFFT::create_index_sets_for_first_gridding(const unsigned int sets_nu
         }
 
     }
-    pcout<<fft_input_set.size()<<" "<<std::endl;
-    std::cout<<this_mpi_process<<" "<<sets_number<<" "<<ni[1]<<" "<<nspread<<" "<<helper[1].size()<<" "<<helper[0].size()<<std::endl;
+    // pcout<<fft_input_set.size()<<" "<<std::endl;
+    // std::cout<<this_mpi_process<<" "<<sets_number<<" "<<ni[1]<<" "<<nspread<<" "<<helper[1].size()<<" "<<helper[0].size()<<std::endl;
 
   // We use helper to split the grid. helper[0] holds the odd parts and helper[1] the even ones.
   for (types::global_dof_index i = 0; i<dividend; i=i+2)
@@ -564,10 +564,10 @@ void BlackNUFFT::compute_ranges()
       sb[i] = (t1+t2) / 2.;
       sm[i] = std::max(t2-sb[i],-t1+sb[i]);  //max(abs(t2-xb),abs(t1-xb))
     }
-    pcout<<xb[0]<<" "<<xb[1]<<" "<<xb[2]<<std::endl;
-    pcout<<xm[0]<<" "<<xm[1]<<" "<<xm[2]<<std::endl;
-    pcout<<sb[0]<<" "<<sb[1]<<" "<<sb[2]<<std::endl;
-    pcout<<sm[0]<<" "<<sm[1]<<" "<<sm[2]<<std::endl;
+    // pcout<<xb[0]<<" "<<xb[1]<<" "<<xb[2]<<std::endl;
+    // pcout<<xm[0]<<" "<<xm[1]<<" "<<xm[2]<<std::endl;
+    // pcout<<sb[0]<<" "<<sb[1]<<" "<<sb[2]<<std::endl;
+    // pcout<<sm[0]<<" "<<sm[1]<<" "<<sm[2]<<std::endl;
     // COMPUTE LOCAL_O_START E LOCAL_O (usa i range)
 
 
