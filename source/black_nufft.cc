@@ -1298,12 +1298,16 @@ void BlackNUFFT::compute_fft_3d()
     out = reinterpret_cast<pfft_complex *> (&fine_grid_data.local_element(0));
     fine_grid_data.zero_out_ghosts();
 
+    std::cout<<ni[0]<<" "<<ni[1]<<" "<<ni[2]<<std::endl;
+    std::cout<<ni[0]*ni[1]*ni[2]*2<<" "<<grid_data_input.size()<<" "<<std::endl;
+    std::cout<<no[0]<<" "<<no[1]<<" "<<no[2]<<std::endl;
+    std::cout<<no[0]*no[1]*no[2]*2<<" "<<fine_grid_data.size()<<" "<<std::endl;
 
     if (fft_backward)
       {
-    pfft_plan = pfft_plan_many_dft(
+      pfft_plan = pfft_plan_many_dft(
         3, complete_n, ni, no, howmany, PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
-        in, out, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
+        in, out, comm_cart_2d, PFFT_BACKWARD, PFFT_ESTIMATE);//PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
         pcout<<"BACKWARD PFFT"<<std::endl;
         pfft_execute(pfft_plan);
       }
@@ -1311,7 +1315,7 @@ void BlackNUFFT::compute_fft_3d()
       {
         pfft_plan = pfft_plan_many_dft(
             3, complete_n, ni, no, howmany, PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
-            in, out, comm_cart_2d, PFFT_FORWARD, PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
+            in, out, comm_cart_2d, PFFT_FORWARD, PFFT_ESTIMATE);// PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
         pcout<<"FORWARD PFFT"<<std::endl;
         pfft_execute(pfft_plan);
       }
