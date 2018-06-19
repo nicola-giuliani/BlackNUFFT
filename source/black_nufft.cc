@@ -167,14 +167,22 @@ void BlackNUFFT::create_index_sets()
 
     howmany = 1;
 
-    pfft_create_procmesh_2d(MPI_COMM_WORLD, np[0], np[1], &comm_cart_2d);
+    pfft_create_procmesh_2d(mpi_communicator, np[0], np[1], &comm_cart_2d);
+    oblock.resize(Utilities::MPI::n_mpi_processes(comm_cart_2d));
+    iblock.resize(Utilities::MPI::n_mpi_processes(comm_cart_2d));
+    ptrdiff_t ib[iblock.size()], ob[oblock.size()];
 
     for(unsigned int i=0; i<3; ++i)
       std::cout<<"PRE "<<ni[i]<<" "<<local_ni[i]<<" "<<local_i_start[i]<<" "<<no[i]<<" "<<local_no[i]<<" "<<local_o_start[i]<<" "<<std::endl;
     alloc_local = pfft_local_size_many_dft(3, complete_n, ni, no, howmany,
-        PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
+        ib, ob,
         comm_cart_2d, PFFT_TRANSPOSED_NONE,
         local_ni, local_i_start, local_no, local_o_start);
+    for(unsigned int i=0; i<oblock.size(); ++i)
+    {
+      iblock[i]=ib[i];
+      oblock[i]=ob[i];
+    }
     for(unsigned int i=0; i<3; ++i)
       std::cout<<"POST "<<ni[i]<<" "<<local_ni[i]<<" "<<local_i_start[i]<<" "<<no[i]<<" "<<local_no[i]<<" "<<local_o_start[i]<<" "<<std::endl;
 
@@ -1294,6 +1302,12 @@ void BlackNUFFT::compute_fft_3d()
     pfft_complex *in, *out;
     pfft_plan pfft_plan=NULL;
     ptrdiff_t howmany = 1;
+    ptrdiff_t ib[iblock.size()], ob[oblock.size()];
+    for(unsigned int i=0; i<iblock.size(); ++i)
+    {
+      ib[i] = iblock[i];
+      ob[i] = oblock[i];
+    }
     in = reinterpret_cast<pfft_complex *> (&grid_data_input.local_element(0));
     out = reinterpret_cast<pfft_complex *> (&fine_grid_data.local_element(0));
     fine_grid_data.zero_out_ghosts();
@@ -1306,16 +1320,16 @@ void BlackNUFFT::compute_fft_3d()
     if (fft_backward)
       {
       pfft_plan = pfft_plan_many_dft(
-        3, complete_n, ni, no, howmany, PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
-        in, out, comm_cart_2d, PFFT_BACKWARD, PFFT_ESTIMATE);//PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
+        3, complete_n, ni, no, howmany, ib, ob,
+        in, out, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE | PFFT_ESTIMATE);//PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
         pcout<<"BACKWARD PFFT"<<std::endl;
         pfft_execute(pfft_plan);
       }
       else
       {
         pfft_plan = pfft_plan_many_dft(
-            3, complete_n, ni, no, howmany, PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
-            in, out, comm_cart_2d, PFFT_FORWARD, PFFT_ESTIMATE);// PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
+            3, complete_n, ni, no, howmany, ib, ob,
+            in, out, comm_cart_2d, PFFT_FORWARD, PFFT_TRANSPOSED_NONE | PFFT_ESTIMATE);// PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
         pcout<<"FORWARD PFFT"<<std::endl;
         pfft_execute(pfft_plan);
       }
