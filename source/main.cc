@@ -2,7 +2,7 @@
 // #include "fftw3.h"
 #include <iostream>
 #include <fstream>
-
+#include <pfft.h>
 
 void read_grid(std::vector<Vector<double> > &input_grid, Vector<double> &input_vector, std::string filename)
 {
@@ -149,8 +149,56 @@ void create_initial_data(types::global_dof_index &nj, types::global_dof_index &n
 }
 
 
+void my_function_pfft()
+{
+  ptrdiff_t np[2], complete_n[3], ni[3], no[3], local_ni[3], local_no[3], local_i_start[3], local_o_start[3], alloc_local;
+  int size;
+  MPI_Comm comm_cart_2d;
+
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  np[0] = size;
+  np[1] = 1;
+
+  ni[0] = 200; ni[1] = 200; ni[2] = 200;
+  no[0] = 100; no[1] = 100; no[2] = 100;
+
+  complete_n[0] = 5000; complete_n[1] = 500; complete_n[2] = 500;
+
+  ptrdiff_t howmany = 1;
+
+  std::cout<<" CREATING PROC MESH "<<std::endl;
+  pfft_create_procmesh_2d(MPI_COMM_WORLD, np[0], np[1], &comm_cart_2d);
+
+
+  std::cout<<" COMPUTING LOCAL SIZES "<<std::endl;
+  alloc_local = pfft_local_size_many_dft(3, complete_n, ni, no, howmany,
+      PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
+      comm_cart_2d, PFFT_TRANSPOSED_NONE,
+      local_ni, local_i_start, local_no, local_o_start);
+
+  std::cout<<local_ni[0]*local_ni[1]*local_ni[2]<<" "<<alloc_local<<std::endl;
+  std::cout<<local_no[0]*local_no[1]*local_no[2]<<" "<<alloc_local<<std::endl;
+  std::cout<<complete_n[0]*complete_n[1]*complete_n[2]<<" "<<alloc_local<<std::endl;
+  pfft_complex * in;
+  in = new pfft_complex[alloc_local];//[local_ni[0]*local_ni[1]*local_ni[2]];
+  pfft_complex * out;
+  out = new pfft_complex[alloc_local];//[local_no[0]*local_no[1]*local_no[2]];
+
+  std::cout<<" PLAN "<<std::endl;
+  pfft_plan pfft_plan = pfft_plan_many_dft(
+    3, complete_n, ni, no, howmany, PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
+    in, out, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE | PFFT_ESTIMATE);//PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
+
+ std::cout<<" EXECUTE "<<std::endl;
+ pfft_execute(pfft_plan);
+ std::cout<<" FINISH "<<std::endl;
+
+ pfft_destroy_plan(pfft_plan);
+
+}
 int main(int argc, char *argv[])
 {
+
   unsigned int threads=numbers::invalid_unsigned_int;
   unsigned int check_results=0;
   if (argc > 2)
@@ -166,6 +214,10 @@ int main(int argc, char *argv[])
   std::string input_vector_file, output_vector_file;
 
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, threads);
+
+  my_function_pfft();
+  return 1;
+
   types::global_dof_index nj = 8640;//3000000;//864000
   types::global_dof_index nk = 8640;//3000000;//864
   double epsilon = 1e-5;//9.9999999999999998E-017;
