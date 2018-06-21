@@ -215,8 +215,8 @@ int main(int argc, char *argv[])
 
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, threads);
 
-  my_function_pfft();
-  return 1;
+  // my_function_pfft();
+  // return 1;
 
   types::global_dof_index nj = 8640;//3000000;//864000
   types::global_dof_index nk = 8640;//3000000;//864

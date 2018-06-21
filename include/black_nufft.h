@@ -18,6 +18,9 @@
 #include <deal.II/base/types.h>
 #include <deal.II/base/timer.h>
 
+#include <pfft.h>
+
+
 #include <cmath>
 #include <iostream>
 #include <fstream>
@@ -104,8 +107,12 @@ private:
    the owned fine data array.*/
   void scaling_input_gridding();
 
-  /** This function calls the MPI fft3d using the FFTW package.*/
+  /** This function calls the MPI fft3d using the FFTW or PFFT package.*/
   void compute_fft_3d();
+
+  void prepare_pfft_array(pfft_complex *in);
+
+  void retrieve_pfft_result(pfft_complex *out);
 
   /** This function performs a circular shift on the transformed array to obtain an overall shifted FFT.
   It is a local multiplication of -1.*/
@@ -173,6 +180,7 @@ private:
   ptrdiff_t local_i_start[3], local_ni[3];
   ptrdiff_t local_o_start[3], local_no[3];
   ptrdiff_t local_n[3], ni[3], no[3], complete_n[3];
+  std::vector<unsigned int> iblock, oblock;
 
   types::global_dof_index local_nf3, local_nf3_start;
 
@@ -207,6 +215,8 @@ private:
   Vector<double> xexp, yexp, zexp;
 
   MPI_Comm mpi_communicator, comm_cart_2d;
+
+  ptrdiff_t alloc_local_pfft;
 
   unsigned int n_mpi_processes, this_mpi_process;
 
