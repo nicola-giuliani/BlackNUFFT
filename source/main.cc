@@ -213,6 +213,7 @@ int main(int argc, char *argv[])
   std::string output_grid_x, output_grid_y, output_grid_z;
   std::string input_vector_file, output_vector_file;
 
+  std::cout<<threads<<std::endl;
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, threads);
 
   types::global_dof_index nj = 8640;//3000000;//864000
@@ -277,6 +278,7 @@ int main(int argc, char *argv[])
       out_grid[2].reinit(nk);
     }
 
+  std::cout<<check_results<<std::endl;
   if (check_results==1)
     {
       read_grid(in_grid,in_vec,"../origin.txt");
