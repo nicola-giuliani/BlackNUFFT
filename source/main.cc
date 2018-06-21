@@ -189,9 +189,28 @@ void my_function_pfft()
     3, complete_n, ni, no, howmany, PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
     in, out, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE | PFFT_ESTIMATE);//PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
 
- std::cout<<" EXECUTE "<<std::endl;
+    ptrdiff_t m = 0;
+    for(ptrdiff_t k0=0; k0 < local_ni[0]; k0++)
+      for(ptrdiff_t k1=0; k1 < local_ni[1]; k1++)
+        for(ptrdiff_t k2=0; k2 < local_ni[2]; k2++)
+        {
+          std::cout<<in[m][0]<<" + j "<<in[m][1]<<" , ";
+          m = m+1;
+        }
+
+ std::cout<<std::endl<<" EXECUTE "<<std::endl;
  pfft_execute(pfft_plan);
  std::cout<<" FINISH "<<std::endl;
+  m = 0;
+ for(ptrdiff_t k0=0; k0 < local_no[0]; k0++)
+   for(ptrdiff_t k1=0; k1 < local_no[1]; k1++)
+     for(ptrdiff_t k2=0; k2 < local_no[2]; k2++)
+     {
+       std::cout<<out[m][0]<<" + j "<<out[m][1]<<" , ";
+       m = m+1;
+
+     }
+
 
  pfft_destroy_plan(pfft_plan);
 
@@ -324,7 +343,7 @@ int main(int argc, char *argv[])
     }
   std::cout<<Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)<<" "<<Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)<<std::endl;
   BlackNUFFT my_nufft(in_grid_ptr, in_vec_ptr, out_grid_ptr, out_vec_ptr);
-  my_nufft.init_nufft(epsilon, iflag, 10,"FGG","FFTW");
+  my_nufft.init_nufft(epsilon, iflag, 10,"FGG","PFFT");
 
   // my_nufft.test_data.reinit(40*40*40*2);//test for eps=1e-4
   // my_nufft.test_data_before.reinit(80*80*80*2);//test for eps=1e-4
@@ -348,6 +367,22 @@ int main(int argc, char *argv[])
   // }
   // my_nufft.test_data->print(std::cout);
   my_nufft.run();
+  for (auto j : out_vec.locally_owned_elements())
+    out_vec[j]=out_vec_ptr[j];
+
+  out_vec.print(std::cout);
+  // input_vector_file = "try_fftw.txt";
+  // std::ifstream in_vecty(input_vector_file.c_str());
+  // out_vec1.block_read(in_vecty);
+  // double error = errcomp(out_vec, out_vec1, out_grid);
+  // std::cout<<"error from FFTW version"<<std::endl;
+  // std::cout<<error<<" "<<epsilon<<std::endl;
+
+  // output_vector_file = "try_fftw.txt";
+  // for (auto j : out_vec.locally_owned_elements())
+  //   out_vec[j]=out_vec_ptr[j];
+  // std::ofstream output_veccy(output_vector_file.c_str());
+  // out_vec.block_write(output_veccy);
 
   if (check_results == 2 && Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==0)
     {
@@ -383,8 +418,6 @@ int main(int argc, char *argv[])
     }
   if (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==0 && check_results == 1)
     {
-      for (auto j : out_vec.locally_owned_elements())
-        out_vec[j]=out_vec_ptr[j];
 
       double error = errcomp(out_vec, out_vec1, out_grid);
       std::cout<<"error from Greengard's version"<<std::endl;
