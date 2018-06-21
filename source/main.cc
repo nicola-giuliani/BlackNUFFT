@@ -101,7 +101,7 @@ double errcomp(Vector<double> &fk0, Vector<double> &fk1,std::vector<Vector<doubl
       ealg += (fk1(k*2)-fk0(k*2))*(fk1(k*2)-fk0(k*2))+(fk1(k*2+1)-fk0(k*2+1))*(fk1(k*2+1)-fk0(k*2+1));
       std::complex<double> foo(fk1(k*2),fk1(k*2+1));
       salg += std::abs(foo)*std::abs(foo);
-      //  std::cout<<ealg<<" "<<salg<<" "<<k<<std::endl;
+       // std::cout<<ealg<<" "<<salg<<" "<<k<<std::endl;
     }
   err = std::sqrt(ealg/salg);
   return err;
@@ -324,7 +324,7 @@ int main(int argc, char *argv[])
     }
   std::cout<<Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)<<" "<<Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)<<std::endl;
   BlackNUFFT my_nufft(in_grid_ptr, in_vec_ptr, out_grid_ptr, out_vec_ptr);
-  my_nufft.init_nufft(epsilon, iflag, 10,"FGG","PFFT");
+  my_nufft.init_nufft(epsilon, iflag, 10,"FGG","FFTW");
 
   // my_nufft.test_data.reinit(40*40*40*2);//test for eps=1e-4
   // my_nufft.test_data_before.reinit(80*80*80*2);//test for eps=1e-4
@@ -383,6 +383,9 @@ int main(int argc, char *argv[])
     }
   if (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==0 && check_results == 1)
     {
+      for (auto j : out_vec.locally_owned_elements())
+        out_vec[j]=out_vec_ptr[j];
+
       double error = errcomp(out_vec, out_vec1, out_grid);
       std::cout<<"error from Greengard's version"<<std::endl;
       std::cout<<error<<" "<<epsilon<<std::endl;
