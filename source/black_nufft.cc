@@ -2,8 +2,7 @@
 #include "fftw3.h"
 #include "fftw3-mpi.h"
 // #include <pfft.h>
-#include <pfft.h>
-#include <pnfft.h>
+// #include <pnfft.h>
 #include <deal.II/base/exceptions.h>
 
 using namespace tbb;
@@ -154,13 +153,14 @@ void BlackNUFFT::create_index_sets()
   {
 
 
-    ptrdiff_t tmp_local_nf3, tmp_local_i_start[2], howmany, alloc_local;
+    ptrdiff_t tmp_local_nf3, tmp_local_i_start[2], howmany;
     ptrdiff_t local_n[3], local_start[3];
     ptrdiff_t np[2];
 
     np[1]=1;
     np[0]=n_mpi_processes;
 
+    pcout<<n_mpi_processes<<" "<<np[0]<<" "<<np[1]<<std::endl;
     const unsigned int cart_dim = 0;
     Assert(np[0]*np[1] == n_mpi_processes, ExcMessage("The number of entries in the MPI cart should be equal to the number of MPI processors"));
 
@@ -174,7 +174,7 @@ void BlackNUFFT::create_index_sets()
 
     for(unsigned int i=0; i<3; ++i)
       std::cout<<"PRE "<<ni[i]<<" "<<local_ni[i]<<" "<<local_i_start[i]<<" "<<no[i]<<" "<<local_no[i]<<" "<<local_o_start[i]<<" "<<std::endl;
-    alloc_local = pfft_local_size_many_dft(3, complete_n, ni, no, howmany,
+    alloc_local_pfft = pfft_local_size_many_dft(3, complete_n, ni, no, howmany,
         ib, ob,
         comm_cart_2d, PFFT_TRANSPOSED_NONE,
         local_ni, local_i_start, local_no, local_o_start);
@@ -1261,11 +1261,56 @@ void BlackNUFFT::shift_data_before_fft()
 }
 
 
+void BlackNUFFT::prepare_pfft_array(pfft_complex *in)
+{
+// grid_data_input -> in
+  TimerOutput::Scope t(computing_timer, " Prepare PFFT ");
+  ptrdiff_t m=0;
+  for(ptrdiff_t k0=0; k0 < local_ni[0]; k0++)
+    for(ptrdiff_t k1=0; k1 < local_ni[1]; k1++)
+      for(ptrdiff_t k2=0; k2 < local_ni[2]; k2++)
+      {
+        // types::global_dof_index ii = jb1 + (jb2+k2-(nspread-1))*ni[2] + (jb3+k3-(nspread-1))*ni[2]*ni[1];
+        //
+        // for (unsigned int k1 = 0; k1<2*nspread; ++k1)
+        //   {
+        //     // pcout<<jb1<<" "<<jb2<<" "<<jb3<<std::endl;
+        //     types::global_dof_index istart = 2*(ii+((int)k1 - (int)(nspread-1)));
+
+        ptrdiff_t my_global_index = 2*(k2 + local_i_start[2] + (k1 + local_i_start[1]) * ni[2] + (k0 + local_i_start[0]) * ni[2] * ni[1]);
+        // k0 + local_i_start[0],
+        //                k1 + local_i_start[1],
+        //                k2 + local_i_start[2]
+        in[m][0] = grid_data_input[my_global_index];
+        in[m][1] = grid_data_input[my_global_index+1];
+        m = m+1;
+      }
+}
+
+void BlackNUFFT::retrieve_pfft_result(pfft_complex *out)
+{
+// out -> fine_grid_data
+  TimerOutput::Scope t(computing_timer, " Retrieve PFFT ");
+
+  ptrdiff_t m=0;
+  for(ptrdiff_t k0=0; k0 < local_no[0]; k0++)
+    for(ptrdiff_t k1=0; k1 < local_no[1]; k1++)
+      for(ptrdiff_t k2=0; k2 < local_no[2]; k2++)
+      {
+        ptrdiff_t my_global_index = 2*(k2 + local_o_start[2] + (k1 + local_o_start[1]) * no[2] + (k0 + local_o_start[0]) * no[2] * no[1]);
+        fine_grid_data[my_global_index] = out[m][0];
+        fine_grid_data[my_global_index] = out[m][1];
+        m = m+1;
+
+      }
+
+}
+
 // This function computes the 3d fft on the fine array. We have chosen to use
 // the state of the art FFTW library.
 void BlackNUFFT::compute_fft_3d()
 {
-  TimerOutput::Scope t(computing_timer, " 3D FFTW ");
+  TimerOutput::Scope t(computing_timer, " 3D FFT ");
   if (fft_type == "FFTW")
     {
       fftw_init_threads();
@@ -1308,14 +1353,16 @@ void BlackNUFFT::compute_fft_3d()
       ib[i] = iblock[i];
       ob[i] = oblock[i];
     }
-    in = reinterpret_cast<pfft_complex *> (&grid_data_input.local_element(0));
-    out = reinterpret_cast<pfft_complex *> (&fine_grid_data.local_element(0));
+    in = new pfft_complex[alloc_local_pfft];//reinterpret_cast<pfft_complex *> (&grid_data_input.local_element(0));
+    out = new pfft_complex[alloc_local_pfft];//reinterpret_cast<pfft_complex *> (&fine_grid_data.local_element(0));
     fine_grid_data.zero_out_ghosts();
 
-    std::cout<<ni[0]<<" "<<ni[1]<<" "<<ni[2]<<std::endl;
-    std::cout<<ni[0]*ni[1]*ni[2]*2<<" "<<grid_data_input.size()<<" "<<std::endl;
-    std::cout<<no[0]<<" "<<no[1]<<" "<<no[2]<<std::endl;
-    std::cout<<no[0]*no[1]*no[2]*2<<" "<<fine_grid_data.size()<<" "<<std::endl;
+    // std::cout<<ni[0]<<" "<<ni[1]<<" "<<ni[2]<<std::endl;
+    // std::cout<<ni[0]*ni[1]*ni[2]*2<<" "<<grid_data_input.size()<<" "<<std::endl;
+    // std::cout<<no[0]<<" "<<no[1]<<" "<<no[2]<<std::endl;
+    // std::cout<<no[0]*no[1]*no[2]*2<<" "<<fine_grid_data.size()<<" "<<std::endl;
+
+    prepare_pfft_array(in);
 
     if (fft_backward)
       {
@@ -1334,6 +1381,7 @@ void BlackNUFFT::compute_fft_3d()
         pfft_execute(pfft_plan);
       }
       pfft_destroy_plan(pfft_plan);
+      retrieve_pfft_result(out);
 
     }
   else
@@ -1347,7 +1395,7 @@ void BlackNUFFT::compute_fft_3d()
 // shifting on the transformed fine grid to obtain the shift. Basically we just need
 // to multiply each element by -1^(i+j+k). This is a local operation so we can use
 // TaskGroup withot caring on synchronisation.
-// TODO: Find a smarter way than pow(-1,i+j+k).
+
 void BlackNUFFT::shift_data_for_fftw3d()
 {
   TimerOutput::Scope t(computing_timer, " Shift Data for FFTW3D ");
