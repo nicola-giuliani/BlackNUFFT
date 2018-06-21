@@ -176,9 +176,9 @@ void my_function_pfft()
       comm_cart_2d, PFFT_TRANSPOSED_NONE,
       local_ni, local_i_start, local_no, local_o_start);
 
-  std::cout<<local_ni[0]*local_ni[1]*local_ni[2]<<" "<<alloc_local<<std::endl;
-  std::cout<<local_no[0]*local_no[1]*local_no[2]<<" "<<alloc_local<<std::endl;
-  std::cout<<complete_n[0]*complete_n[1]*complete_n[2]<<" "<<alloc_local<<std::endl;
+  std::cout<<Utilities::MPI::this_mpi_process(comm_cart_2d)<<" "<<local_ni[0]*local_ni[1]*local_ni[2]<<" "<<alloc_local<<std::endl;
+  std::cout<<Utilities::MPI::this_mpi_process(comm_cart_2d)<<" "<<local_no[0]*local_no[1]*local_no[2]<<" "<<alloc_local<<std::endl;
+  std::cout<<Utilities::MPI::this_mpi_process(comm_cart_2d)<<" "<<complete_n[0]*complete_n[1]*complete_n[2]<<" "<<alloc_local<<std::endl;
   pfft_complex * in;
   in = new pfft_complex[alloc_local];//[local_ni[0]*local_ni[1]*local_ni[2]];
   pfft_complex * out;
@@ -215,15 +215,14 @@ int main(int argc, char *argv[])
 
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, threads);
 
-  // my_function_pfft();
-  // return 1;
-
   types::global_dof_index nj = 8640;//3000000;//864000
   types::global_dof_index nk = 8640;//3000000;//864
   double epsilon = 1e-5;//9.9999999999999998E-017;
   double grid_limit = 100.;
   bool iflag = false;
 
+  // my_function_pfft();
+  // return 1;
 
   std::vector<Vector<double> > in_grid(3);
   Vector<double> in_vec;
