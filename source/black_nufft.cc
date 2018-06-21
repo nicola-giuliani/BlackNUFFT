@@ -347,11 +347,11 @@ void BlackNUFFT::create_index_sets_for_first_gridding(const unsigned int sets_nu
     // std::cout<<this_mpi_process<<" OK"<<std::endl;
 
 
-  for (types::global_dof_index i=0; i<helper.size(); ++i)
-    for (types::global_dof_index j=0; j<helper.size(); ++j)
-      {
-        helper[i][j].compress();
-      }
+  // for (types::global_dof_index i=0; i<helper.size(); ++i)
+  //   for (types::global_dof_index j=0; j<helper.size(); ++j)
+  //     {
+  //       helper[i][j].compress();
+  //     }
   for (auto j : input_set)
     {
       auto jb1 = types::global_dof_index(double(nf1/2) + (input_grid[0][j]-xb[0])/hx - input_offset[0]);
@@ -494,11 +494,18 @@ void BlackNUFFT::compute_tolerance_infos()
       no[1] = nf2;
       no[0] = nf3;
 
+      pcout<<no[2]<<" "<<no[1]<<" "<<no[0]<<std::endl;
+      pcout<<sm[0]<<" "<<sm[1]<<" "<<sm[2]<<std::endl;
+      pcout<<sb[0]<<" "<<sb[1]<<" "<<sb[2]<<std::endl;
+      pcout<<hs<<" "<<ht<<" "<<hu<<std::endl;
+      pcout<<nf1<<" "<<nf2<<" "<<nf3<<std::endl;
+
+
     }
     else if(fft_type=="PFFT")
     {
       input_offset[2] = int(double(nf1/2) - (xm[0])/hx) - nspread;
-      pcout<<double(nf1/2)<<" "<<xm[0]<<" "<<hx<<std::endl;
+      pcout<<" MM "<<double(nf1/2)<<" "<<xm[0]<<" "<<hx<<std::endl;
       input_offset[1] = int(double(nf2/2) - (xm[1])/hy) - nspread;
       input_offset[0] = int(double(nf3/2) - (xm[2])/hz) - nspread;
 
@@ -507,18 +514,24 @@ void BlackNUFFT::compute_tolerance_infos()
       output_offset[0] = int(double(nf3/2) - (sm[2])/hu) - nspread;
 
       // TODO RIFLETTERE SUL + 1 PER VIA DELLA NUMERAZIONE DA 0
-      ni[2] = int(double(nf1/2) + (xm[0]+xb[0])/hx) - input_offset[0] + 1 + nspread;
-      ni[1] = int(double(nf2/2) + (xm[1]+xb[1])/hy) - input_offset[1] + 1 + nspread;
-      ni[0] = int(double(nf3/2) + (xm[2]+xb[2])/hz) - input_offset[2] + 1 + nspread;
+      ni[2] = int(double(nf1/2) + (xm[0])/hx) - input_offset[0] + 1 + nspread;//+xb[0]
+      ni[1] = int(double(nf2/2) + (xm[1])/hy) - input_offset[1] + 1 + nspread;//+xb[1]
+      ni[0] = int(double(nf3/2) + (xm[2])/hz) - input_offset[2] + 1 + nspread;//+xb[2]
 
-      no[2] = int(double(nf1/2) + (sm[0]+sb[0])/hs) - output_offset[0] + 1 + nspread;
-      no[1] = int(double(nf2/2) + (sm[1]+sb[1])/ht) - output_offset[1] + 1 + nspread;
-      no[0] = int(double(nf3/2) + (sm[2]+sb[2])/hu) - output_offset[2] + 1 + nspread;
+      no[2] = int(double(nf1/2) + (sm[0])/hs) - output_offset[0] + 1 + nspread;//+sb[0]
+      no[1] = int(double(nf2/2) + (sm[1])/ht) - output_offset[1] + 1 + nspread;//+sb[1]
+      no[0] = int(double(nf3/2) + (sm[2])/hu) - output_offset[2] + 1 + nspread;//+sb[2]
 
       pcout<<input_offset[2]<<" "<<input_offset[1]<<" "<<input_offset[0]<<std::endl;
       pcout<<ni[2]<<" "<<ni[1]<<" "<<ni[0]<<std::endl;
       pcout<<output_offset[2]<<" "<<output_offset[1]<<" "<<output_offset[0]<<std::endl;
       pcout<<no[2]<<" "<<no[1]<<" "<<no[0]<<std::endl;
+      pcout<<sm[0]<<" "<<sm[1]<<" "<<sm[2]<<std::endl;
+      // pcout<<sb[0]<<" "<<sb[1]<<" "<<sb[2]<<std::endl;
+      // pcout<<hs<<" "<<ht<<" "<<hu<<std::endl;
+      // pcout<<nf1<<" "<<nf2<<" "<<nf3<<std::endl;
+
+      // pcout<<int(double(nf1/2) + (sm[0]+sb[0])/hs)<<" "<<int(double(nf2/2) + (sm[1]+sb[1])/ht)<<" "<<int(double(nf3/2) + (sm[2]+sb[2])/hu)<<" "<<nspread<<std::endl;
     }
    else
     AssertThrow(true, ExcNotImplemented());
