@@ -235,8 +235,8 @@ int main(int argc, char *argv[])
   std::cout<<threads<<std::endl;
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, threads);
 
-  types::global_dof_index nj = 864;//3000000;//864000
-  types::global_dof_index nk = 864;//3000000;//864
+  types::global_dof_index nj = 8;//6;//4;//3000000;//864000
+  types::global_dof_index nk = 8;//64;//3000000;//864
   double epsilon = 1e-5;//9.9999999999999998E-017;
   double grid_limit = 100.;
   bool iflag = false;
@@ -371,17 +371,19 @@ int main(int argc, char *argv[])
     out_vec[j]=out_vec_ptr[j];
 
   // out_vec.print(std::cout);
+
   input_vector_file = "try_fftw.txt";
   std::ifstream in_vecty(input_vector_file.c_str());
   out_vec1.block_read(in_vecty);
-  std::cout<<out_vec.size()<<out_vec1.size()<<std::endl;
+  // std::cout<<out_vec.size()<<out_vec1.size()<<std::endl;
   double error = errcomp(out_vec, out_vec1, out_grid);
   std::cout<<"error from FFTW version"<<std::endl;
   std::cout<<error<<" "<<epsilon<<std::endl;
-
+  for (auto j : out_vec.locally_owned_elements())
+      std::cout<<out_vec[j]<<" "<<out_vec1[j]<<std::endl;
   // output_vector_file = "try_fftw.txt";
   // std::ofstream output_veccy(output_vector_file.c_str());
-  // out_vec.block_write(out_vec);
+  // out_vec.block_write(output_veccy);
 
   if (check_results == 2 && Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==0)
     {
