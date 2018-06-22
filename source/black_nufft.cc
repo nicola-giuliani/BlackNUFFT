@@ -676,9 +676,9 @@ void BlackNUFFT::fast_gaussian_gridding_on_input()
     types::global_dof_index jb1 = types::global_dof_index(double(nf1/2) + (input_grid[0][j]-xb[0])/hx - input_offset[0]);
     types::global_dof_index jb2 = types::global_dof_index(double(nf2/2) + (input_grid[1][j]-xb[1])/hy - input_offset[1]);
     types::global_dof_index jb3 = types::global_dof_index(double(nf3/2) + (input_grid[2][j]-xb[2])/hz - input_offset[2]);
-    double diff1 = double(nf1/2) + (input_grid[0][j]-xb[0])/hx - jb1;
-    double diff2 = double(nf2/2) + (input_grid[1][j]-xb[1])/hy - jb2;
-    double diff3 = double(nf3/2) + (input_grid[2][j]-xb[2])/hz - jb3;
+    double diff1 = double(nf1/2) + (input_grid[0][j]-xb[0])/hx - (jb1+input_offset[0]);
+    double diff2 = double(nf2/2) + (input_grid[1][j]-xb[1])/hy - (jb2+input_offset[1]);
+    double diff3 = double(nf3/2) + (input_grid[2][j]-xb[2])/hz - (jb3+input_offset[2]);
     double ang = sb[0]*input_grid[0][j] + sb[1]*input_grid[1][j] + sb[2]*input_grid[2][j];
     std::complex<double> dummy1(std::cos(ang), std::sin(ang));
     std::complex<double> dummy2(input_vector[2*j], input_vector[2*j+1]);
@@ -692,6 +692,8 @@ void BlackNUFFT::fast_gaussian_gridding_on_input()
 
     double cross = xc[nspread-1];
     double cross1 = exp(2.*t1 * diff1);
+    // pcout<<"PRE CROSS1 "<<double(nf1/2)<<" "<<j<<" "<<input_grid[0][j]<<" "<<xb[0]<<" "<<hx<<" "<<jb1<<" "<<input_offset[0]<<std::endl;
+    // pcout<<"CROSS1 "<<t1<<" "<<diff1<<" "<<(2.*t1 * diff1)<<" "<<cross1<<std::endl;
     for (unsigned int k1 = 0; k1 < nspread; ++k1)
       {
         cross = cross * cross1;
@@ -717,6 +719,9 @@ void BlackNUFFT::fast_gaussian_gridding_on_input()
     yc[2*nspread-1] = yexp[nspread-1]*cross;
     // 2c) Precomptaiton in z
     zc[nspread-1] = 1.;
+    // pcout<<"YC"<<std::endl;
+    // yc.print(std::cout);
+    // yexp.print(std::cout);
     cross = std::exp(2.*t3 * diff3);
     cross1 = cross;
     for (unsigned int k3 = 0; k3 < nspread-1; ++k3)
@@ -1294,9 +1299,13 @@ void BlackNUFFT::prepare_pfft_array(pfft_complex *in)
         // k0 + local_i_start[0],
         //                k1 + local_i_start[1],
         //                k2 + local_i_start[2]
-        in[m][0] = grid_data_input[my_global_index];
-        in[m][1] = grid_data_input[my_global_index+1];
+        in[m][0] = (*input_grid_helper)[my_global_index];
+        in[m][1] = (*input_grid_helper)[my_global_index+1];
+
+        // if(in[m][0] != 0 || in[m][1] != 0)
+        //   pcout<<in[m][0]<<" "<<in[m][1]<<" ";
         m = m+1;
+
       }
 }
 
@@ -1313,9 +1322,12 @@ void BlackNUFFT::retrieve_pfft_result(pfft_complex *out)
         ptrdiff_t my_global_index = 2*(k2 + local_o_start[2] + (k1 + local_o_start[1]) * no[2] + (k0 + local_o_start[0]) * no[2] * no[1]);
         fine_grid_data[my_global_index] = out[m][0];
         fine_grid_data[my_global_index] = out[m][1];
+        // if(out[m][0] != 0 || out[m][1] != 0)
+        //   pcout<<out[m][0]<<" "<<out[m][1]<<" ";
         m = m+1;
 
       }
+  pcout<<std::endl;
 
 }
 
@@ -1560,9 +1572,9 @@ void BlackNUFFT::fast_gaussian_gridding_on_output()
     copy_data.kb2 = types::global_dof_index(double(nf2/2) + (output_grid[1][j]-sb[1])/ht - output_offset[1]);
     copy_data.kb3 = types::global_dof_index(double(nf3/2) + (output_grid[2][j]-sb[2])/hu - output_offset[2]);
 
-    copy_data.diff1 = double(nf1/2) + (output_grid[0][j]-sb[0])/hs - copy_data.kb1;
-    copy_data.diff2 = double(nf2/2) + (output_grid[1][j]-sb[1])/ht - copy_data.kb2;
-    copy_data.diff3 = double(nf3/2) + (output_grid[2][j]-sb[2])/hu - copy_data.kb3;
+    copy_data.diff1 = double(nf1/2) + (output_grid[0][j]-sb[0])/hs - (copy_data.kb1 + output_offset[0]);
+    copy_data.diff2 = double(nf2/2) + (output_grid[1][j]-sb[1])/ht - (copy_data.kb2 + output_offset[1]);
+    copy_data.diff3 = double(nf3/2) + (output_grid[2][j]-sb[2])/hu - (copy_data.kb3 + output_offset[2]);
 
     // if(j==0)
     //   std::cout<<hu<<" "<<(output_grid[2][j]-sb[2])/hu<<" "<<nf3/2<<std::endl;
@@ -1584,6 +1596,7 @@ void BlackNUFFT::fast_gaussian_gridding_on_output()
 
     copy_data.cross = xc[nspread-1];
     copy_data.cross1 = exp(2.*t1 * copy_data.diff1);
+
     for (unsigned int k1 = 0; k1 < nspread; ++k1)
       {
         copy_data.cross = copy_data.cross * copy_data.cross1;
@@ -1682,9 +1695,9 @@ void BlackNUFFT::fast_gaussian_gridding_on_output()
         types::global_dof_index kb2 = types::global_dof_index(double(nf2/2) + (output_grid[1][j]-sb[1])/ht - output_offset[1]);
         types::global_dof_index kb3 = types::global_dof_index(double(nf3/2) + (output_grid[2][j]-sb[2])/hu - output_offset[2]);
 
-        double diff1 = double(nf1/2) + (output_grid[0][j]-sb[0])/hs - kb1;
-        double diff2 = double(nf2/2) + (output_grid[1][j]-sb[1])/ht - kb2;
-        double diff3 = double(nf3/2) + (output_grid[2][j]-sb[2])/hu - kb3;
+        double diff1 = double(nf1/2) + (output_grid[0][j]-sb[0])/hs - (kb1 + output_offset[0]);
+        double diff2 = double(nf2/2) + (output_grid[1][j]-sb[1])/ht - (kb2 + output_offset[1]);
+        double diff3 = double(nf3/2) + (output_grid[2][j]-sb[2])/hu - (kb3 + output_offset[2]);
 
         // if(j==0)
         //   std::cout<<hu<<" "<<(output_grid[2][j]-sb[2])/hu<<" "<<nf3/2<<std::endl;
@@ -1706,6 +1719,9 @@ void BlackNUFFT::fast_gaussian_gridding_on_output()
 
         double cross = xc[nspread-1];
         double cross1 = exp(2.*t1 * diff1);
+        // pcout<<"PRE CROSS1 "<<double(nf1/2)<<" "<<j<<" "<<input_grid[0][j]<<" "<<xb[0]<<" "<<hx<<" "<<copy_data.kb1<<" "<<input_offset[0]<<std::endl;
+        // pcout<<"CROSS1 "<<t1<<" "<<copy_data.diff1<<" "<<(2.*t1 * copy_data.diff1)<<" "<<copy_data.cross1<<std::endl;
+
         for (unsigned int k1 = 0; k1 < nspread; ++k1)
           {
             cross = cross * cross1;
