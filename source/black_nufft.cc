@@ -1366,7 +1366,15 @@ void BlackNUFFT::compute_fft_3d()
       else
         {
           p = fftw_mpi_plan_dft_3d(nf3, nf2, nf1,dummy, dummy, mpi_communicator, FFTW_FORWARD, FFTW_ESTIMATE);
-          fftw_execute(p);
+          // int n[] = {(int)ni[2], (int)ni[1], (int)ni[0]};
+          // int *inembed = n, *onembed = n;
+          // p = fftw_plan_many_dft(3, n, 1,
+          //                    dummy, inembed,
+          //                    1, 0,
+          //                    dummy, onembed,
+          //                    1, 0,
+          //                    FFTW_FORWARD, FFTW_ESTIMATE);
+          // fftw_execute(p);
           pcout<<"FORWARD FFT"<<std::endl;
 
         }
@@ -1442,7 +1450,7 @@ void BlackNUFFT::shift_data_for_fftw3d()
           // types::global_dof_index ii = (nf2/2+k2-nspread-iw8)*nf1 + (nf3/2+k3-nspread-iw9)*nf1*nf2;
           for (types::global_dof_index k1 = local_o_start[2]; k1 < (local_no[2]+local_o_start[2]); ++k1)
             {
-              double multi = -2*(double)((k3+k2+k1)%2)+1;
+              double multi = -2*(double)(((k3+output_offset[2])+(k2+output_offset[1])+(k1+output_offset[0]))%2)+1;
               //(local_no[1]+local_o_start[1]) = old nf2
               //(local_no[2]+local_o_start[2]) = old nf1
               fine_grid_data[2*(k3*(local_no[2]+local_o_start[2])*(local_no[1]+local_o_start[1])+k2*(local_no[2]+local_o_start[2])+k1)] *= multi;//std::pow(-1,k3+k2+k1);
@@ -1917,6 +1925,16 @@ void BlackNUFFT::run()
   // 7) Local circular shifting
   shift_data_for_fftw3d();
 
+
+  for(unsigned int i = 0; i<no[0]; ++i)
+  for(unsigned int j = 0; j<no[1]; ++j)
+  {
+  for(unsigned int k = 0; k<no[2]; ++k)
+  {
+    if(fine_grid_data[2*((i+0) * no[1] * no[2] + (j+0) * no[2] + (k+0))] != 0.)
+      pcout<<i<<" "<<j<<" "<<k<<" "<<2*((i+0) * no[1] * no[2] + (j+0) * no[2] + (k+0))<<" "<<fine_grid_data[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))]<<std::endl;
+  }
+  }
 
   // for(unsigned int i = 0; i<ni[0]; ++i)
   // for(unsigned int j = 0; j<ni[1]; ++j)
