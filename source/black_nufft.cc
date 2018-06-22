@@ -1063,8 +1063,10 @@ void BlackNUFFT::scaling_input_gridding()
 
             if ( fft_input_set.is_element(2*ii))
               {
+
                 c2 = std::complex<double>((*input_grid_helper)[2*ii],(*input_grid_helper)[2*ii+1]);
                 zz = (cross* deconv_array_z[0])*c2;
+                // pcout<<"SCALING CHECK "<<ii<<" "<<cross<<" "<<deconv_array_z[0]<<" "<<zz.real()<<" "<<zz.imag()<<" "<<(*input_grid_helper)[2*ii]<<" "<<std::endl;
                 (*input_grid_helper)[2*ii] = zz.real();
                 (*input_grid_helper)[2*ii+1] = zz.imag();
               }
@@ -1906,9 +1908,13 @@ void BlackNUFFT::run()
   // // 5) Deconvolution for the Second FGG (8)
   // scaling_input_gridding();
   // // 6) Compute the 3d FFT using FFTW
-  compute_fft_3d();
-  // 7) Local circular shifting
-  shift_data_for_fftw3d();
+
+  // compute_fft_3d();
+  // // 7) Local circular shifting
+  // shift_data_for_fftw3d();
+
+  fine_grid_data*=0;
+  fine_grid_data.add(1.);
 
   output_gridding();
   // // 8) Second FGG from the transformed fine grid to the
