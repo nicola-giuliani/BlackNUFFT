@@ -134,6 +134,7 @@ void BlackNUFFT::create_index_sets()
 
       fine_grid_data.reinit(fftw3_set, fftw3_output_set, mpi_communicator);
       input_grid_helper = &fine_grid_data;
+      // pcout<<input_grid_helper->size()<<" "<<fine_grid_data.size()<<std::endl;
       // We create the input set associated with the set needed by fftw 3d.
       input_set.set_size(nj);
       for (types::global_dof_index j=0; j<nj; ++j)
@@ -232,6 +233,7 @@ void BlackNUFFT::create_index_sets()
     grid_data_input.reinit(fft_input_set, comm_cart_2d);
     input_grid_helper = &grid_data_input;
     fine_grid_data.reinit(fft_output_set, pfft_output_set, comm_cart_2d);//grid_data_output
+    pcout<<fft_output_set.size()<<" "<<fft_input_set.size()<<" "<<grid_data_input.size()<<" "<<fine_grid_data.size()<<std::endl;
     // fine_grid_data.reinit(fftw3_set, fftw3_output_set, mpi_communicator);
 
     // We create the input set associated with the set needed by fftw 3d.
@@ -1077,10 +1079,11 @@ void BlackNUFFT::scaling_input_gridding()
                 types::global_dof_index is2;
 
                 is2 = 2*(ii+k3* ni[2]* ni[1]);
-                if ( fftw3_set.is_element(is2))
+                if ( fft_input_set.is_element(is2))
                   {
                     c2 = std::complex<double>((*input_grid_helper)[is2],(*input_grid_helper)[is2+1]);
                     zz = (cross* deconv_array_z[k3])*c2;
+                    // pcout<<"SCALING CHECK "<<ii<<" "<<cross<<" "<<deconv_array_z[0]<<" "<<zz.real()<<" "<<zz.imag()<<" "<<(*input_grid_helper)[2*ii]<<" "<<std::endl;
                     (*input_grid_helper)[is2] = zz.real();
                     (*input_grid_helper)[is2+1] = zz.imag();
                   }
@@ -1089,6 +1092,7 @@ void BlackNUFFT::scaling_input_gridding()
                   {
                     c2 = std::complex<double>((*input_grid_helper)[is2],(*input_grid_helper)[is2+1]);
                     zz = (cross* deconv_array_z[k3])*c2;
+                    // pcout<<"SCALING CHECK "<<ii<<" "<<cross<<" "<<deconv_array_z[0]<<" "<<zz.real()<<" "<<zz.imag()<<" "<<(*input_grid_helper)[2*ii]<<" "<<std::endl;
                     (*input_grid_helper)[is2] = zz.real();
                     (*input_grid_helper)[is2+1] = zz.imag();
                   }
@@ -1909,12 +1913,36 @@ void BlackNUFFT::run()
   // scaling_input_gridding();
   // // 6) Compute the 3d FFT using FFTW
 
-  // compute_fft_3d();
-  // // 7) Local circular shifting
-  // shift_data_for_fftw3d();
+  compute_fft_3d();
+  // 7) Local circular shifting
+  shift_data_for_fftw3d();
 
-  fine_grid_data*=0;
-  fine_grid_data.add(1.);
+
+  // for(unsigned int i = 0; i<ni[0]; ++i)
+  // for(unsigned int j = 0; j<ni[1]; ++j)
+  // {
+  // for(unsigned int k = 0; k<ni[2]; ++k)
+  // {
+  //   if((*input_grid_helper)[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))] != 0.)
+  //     pcout<<i<<" "<<j<<" "<<k<<" "<<2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))<<" "<<(*input_grid_helper)[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))]<<std::endl;
+  // }
+  // }
+
+  // fine_grid_data*=0;
+  // fine_grid_data.add(1.);
+  // pcout<<fine_grid_data.size()<<" "<<input_grid_helper->size()<<std::endl;
+  // for(auto i : fine_grid_data.locally_owned_elements())
+  //   fine_grid_data[i] = (*input_grid_helper)[i];
+  // for (unsigned int i = 0; i<4; ++i)
+  // for (unsigned int j = 0; j<4; ++j)
+  // for (unsigned int k = 0; k<4; ++k)
+  // {
+  //   auto ii_1 = 2*((i+1) * no[1] * no[2] + (j+1) * no[2] + (k+1));
+  //   auto ii_2 = 2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0));
+  //   // std::cout<<ii_1<<" "<<ii_2<<std::endl;
+  //   fine_grid_data[ii_1] = (*input_grid_helper)[ii_2];
+  //   fine_grid_data[ii_1+1] = (*input_grid_helper)[ii_2+1];
+  // }
 
   output_gridding();
   // // 8) Second FGG from the transformed fine grid to the

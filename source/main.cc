@@ -237,8 +237,8 @@ int main(int argc, char *argv[])
 
   types::global_dof_index nj = 8;//6;//4;//3000000;//864000
   types::global_dof_index nk = 8;//64;//3000000;//864
-  double epsilon = 1e-5;//9.9999999999999998E-017;
-  double grid_limit = 100.;
+  double epsilon = 1e-1;//9.9999999999999998E-017;
+  double grid_limit = 1.;
   bool iflag = false;
 
   // my_function_pfft();
@@ -311,6 +311,9 @@ int main(int argc, char *argv[])
     create_initial_data(nj,nk,in_grid,in_vec,out_grid,grid_limit);
 
 
+  // for(unsigned int i=0; i<3; ++i)
+  //   // for(auto j : out_grid[i].locally_owned_elements())
+  //     out_grid[i].sadd(0.,numbers::PI * grid_limit ,in_grid[i]);
   double foo;
   // std::vector<VectorView<double> > in_foo(3,VectorView<double>(1,&foo));
   // std::vector<VectorView<double> > out_foo(3,VectorView<double>(1,&foo));
@@ -343,7 +346,7 @@ int main(int argc, char *argv[])
     }
   std::cout<<Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)<<" "<<Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)<<std::endl;
   BlackNUFFT my_nufft(in_grid_ptr, in_vec_ptr, out_grid_ptr, out_vec_ptr);
-  my_nufft.init_nufft(epsilon, iflag, 10,"FGG","PFFT");
+  my_nufft.init_nufft(epsilon, iflag, 10,"FGG","FFTW");
 
   // my_nufft.test_data.reinit(40*40*40*2);//test for eps=1e-4
   // my_nufft.test_data_before.reinit(80*80*80*2);//test for eps=1e-4
@@ -372,18 +375,19 @@ int main(int argc, char *argv[])
 
   // out_vec.print(std::cout);
 
-  input_vector_file = "try_fftw.txt";
-  std::ifstream in_vecty(input_vector_file.c_str());
-  out_vec1.block_read(in_vecty);
-  // std::cout<<out_vec.size()<<out_vec1.size()<<std::endl;
-  double error = errcomp(out_vec, out_vec1, out_grid);
-  std::cout<<"error from FFTW version"<<std::endl;
-  std::cout<<error<<" "<<epsilon<<std::endl;
-  for (auto j : out_vec.locally_owned_elements())
-      std::cout<<out_vec[j]<<" "<<out_vec1[j]<<std::endl;
-  // output_vector_file = "try_fftw.txt";
-  // std::ofstream output_veccy(output_vector_file.c_str());
-  // out_vec.block_write(output_veccy);
+  // input_vector_file = "try_fftw.txt";
+  // std::ifstream in_vecty(input_vector_file.c_str());
+  // out_vec1.block_read(in_vecty);
+  // // std::cout<<out_vec.size()<<out_vec1.size()<<std::endl;
+  // double error = errcomp(out_vec, out_vec1, out_grid);
+  // std::cout<<"error from FFTW version"<<std::endl;
+  // std::cout<<error<<" "<<epsilon<<std::endl;
+  // for (auto j : out_vec.locally_owned_elements())
+  //     std::cout<<out_vec[j]<<" "<<out_vec1[j]<<std::endl;
+
+  output_vector_file = "try_fftw.txt";
+  std::ofstream output_veccy(output_vector_file.c_str());
+  out_vec.block_write(output_veccy);
 
   if (check_results == 2 && Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==0)
     {
