@@ -177,7 +177,7 @@ void BlackNUFFT::create_index_sets()
       std::cout<<"PRE "<<ni[i]<<" "<<local_ni[i]<<" "<<local_i_start[i]<<" "<<no[i]<<" "<<local_no[i]<<" "<<local_o_start[i]<<" "<<std::endl;
     alloc_local_pfft = pfft_local_size_many_dft(3, complete_n, ni, no, howmany,
         PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
-        comm_cart_2d, PFFT_TRANSPOSED_NONE,
+        comm_cart_2d, PFFT_SHIFTED_IN | PFFT_SHIFTED_OUT | PFFT_TRANSPOSED_NONE,
         local_ni, local_i_start, local_no, local_o_start);
     // for(unsigned int i=0; i<oblock.size(); ++i)
     // {
@@ -507,22 +507,22 @@ void BlackNUFFT::compute_tolerance_infos()
     else if(fft_type=="PFFT")
     {
       input_offset[2] = int(double(nf1/2) - (xm[0])/hx) - nspread;
-      pcout<<" MM "<<double(nf1/2)<<" "<<xm[0]<<" "<<hx<<std::endl;
+      // pcout<<" MM "<<double(nf1/2)<<" "<<xm[0]<<" "<<hx<<std::endl;
       input_offset[1] = int(double(nf2/2) - (xm[1])/hy) - nspread;
       input_offset[0] = int(double(nf3/2) - (xm[2])/hz) - nspread;
 
-      output_offset[2] = int(double(nf1/2) - (sm[0])/hs) - nspread;
-      output_offset[1] = int(double(nf2/2) - (sm[1])/ht) - nspread;
-      output_offset[0] = int(double(nf3/2) - (sm[2])/hu) - nspread;
+      output_offset[2] = 0;//int(double(nf1/2) - (sm[0])/hs) - nspread;
+      output_offset[1] = 0;//int(double(nf2/2) - (sm[1])/ht) - nspread;
+      output_offset[0] = 0;//int(double(nf3/2) - (sm[2])/hu) - nspread;
 
       // TODO RIFLETTERE SUL + 1 PER VIA DELLA NUMERAZIONE DA 0
       ni[2] = int(double(nf1/2) + (xm[0])/hx) - input_offset[0] + 1 + nspread;//+xb[0]
       ni[1] = int(double(nf2/2) + (xm[1])/hy) - input_offset[1] + 1 + nspread;//+xb[1]
       ni[0] = int(double(nf3/2) + (xm[2])/hz) - input_offset[2] + 1 + nspread;//+xb[2]
 
-      no[2] = int(double(nf1/2) + (sm[0])/hs) - output_offset[0] + 1 + nspread;//+sb[0]
-      no[1] = int(double(nf2/2) + (sm[1])/ht) - output_offset[1] + 1 + nspread;//+sb[1]
-      no[0] = int(double(nf3/2) + (sm[2])/hu) - output_offset[2] + 1 + nspread;//+sb[2]
+      no[2] = nf1;//int(double(nf1/2) + (sm[0])/hs) - output_offset[0] + 1 + nspread;//+sb[0]
+      no[1] = nf2;//int(double(nf2/2) + (sm[1])/ht) - output_offset[1] + 1 + nspread;//+sb[1]
+      no[0] = nf3;//int(double(nf3/2) + (sm[2])/hu) - output_offset[2] + 1 + nspread;//+sb[2]
 
       pcout<<input_offset[2]<<" "<<input_offset[1]<<" "<<input_offset[0]<<std::endl;
       pcout<<ni[2]<<" "<<ni[1]<<" "<<ni[0]<<std::endl;
@@ -1290,29 +1290,40 @@ void BlackNUFFT::prepare_pfft_array(pfft_complex *in)
 // grid_data_input -> in
   TimerOutput::Scope t(computing_timer, " Prepare PFFT ");
   ptrdiff_t m=0;
-  for(ptrdiff_t k0=0; k0 < local_ni[0]; k0++)
-    for(ptrdiff_t k1=0; k1 < local_ni[1]; k1++)
-      for(ptrdiff_t k2=0; k2 < local_ni[2]; k2++)
-      {
-        // types::global_dof_index ii = jb1 + (jb2+k2-(nspread-1))*ni[2] + (jb3+k3-(nspread-1))*ni[2]*ni[1];
-        //
-        // for (unsigned int k1 = 0; k1<2*nspread; ++k1)
-        //   {
-        //     // pcout<<jb1<<" "<<jb2<<" "<<jb3<<std::endl;
-        //     types::global_dof_index istart = 2*(ii+((int)k1 - (int)(nspread-1)));
 
-        ptrdiff_t my_global_index = 2*(k2 + local_i_start[2] + (k1 + local_i_start[1]) * ni[2] + (k0 + local_i_start[0]) * ni[2] * ni[1]);
-        // k0 + local_i_start[0],
-        //                k1 + local_i_start[1],
-        //                k2 + local_i_start[2]
-        in[m][0] = (*input_grid_helper)[my_global_index];
-        in[m][1] = (*input_grid_helper)[my_global_index+1];
+  for(ptrdiff_t i = 0; i<input_grid_helper->local_size(); i=i+2)
+  {
+    in[m][0] = (*input_grid_helper)[i];
+    in[m][1] = (*input_grid_helper)[i+1];
+    m=m+1;
+  }
+  pcout<<m<<std::endl;
 
-        // if(in[m][0] != 0 || in[m][1] != 0)
-        //   pcout<<in[m][0]<<" "<<in[m][1]<<" ";
-        m = m+1;
 
-      }
+
+  // for(ptrdiff_t k0=local_i_start[0]; k0 < local_ni[0]; k0++)
+  //   for(ptrdiff_t k1=local_i_start[1]; k1 < local_ni[1]; k1++)
+  //     for(ptrdiff_t k2=local_i_start[2]; k2 < local_ni[2]; k2++)
+  //     {
+  //       // types::global_dof_index ii = jb1 + (jb2+k2-(nspread-1))*ni[2] + (jb3+k3-(nspread-1))*ni[2]*ni[1];
+  //       //
+  //       // for (unsigned int k1 = 0; k1<2*nspread; ++k1)
+  //       //   {
+  //       //     // pcout<<jb1<<" "<<jb2<<" "<<jb3<<std::endl;
+  //       //     types::global_dof_index istart = 2*(ii+((int)k1 - (int)(nspread-1)));
+  //
+  //       ptrdiff_t my_global_index = 2*(k2 + local_i_start[2] + (k1 + local_i_start[1]) * ni[2] + (k0 + local_i_start[0]) * ni[2] * ni[1]);
+  //       // k0 + local_i_start[0],
+  //       //                k1 + local_i_start[1],
+  //       //                k2 + local_i_start[2]
+  //       in[m][0] = (*input_grid_helper)[my_global_index];
+  //       in[m][1] = (*input_grid_helper)[my_global_index+1];
+  //
+  //       // if(in[m][0] != 0 || in[m][1] != 0)
+  //       //   pcout<<in[m][0]<<" "<<in[m][1]<<" ";
+  //       m = m+1;
+  //
+  //     }
 }
 
 void BlackNUFFT::retrieve_pfft_result(pfft_complex *out)
@@ -1321,19 +1332,28 @@ void BlackNUFFT::retrieve_pfft_result(pfft_complex *out)
   TimerOutput::Scope t(computing_timer, " Retrieve PFFT ");
 
   ptrdiff_t m=0;
-  for(ptrdiff_t k0=0; k0 < local_no[0]; k0++)
-    for(ptrdiff_t k1=0; k1 < local_no[1]; k1++)
-      for(ptrdiff_t k2=0; k2 < local_no[2]; k2++)
-      {
-        ptrdiff_t my_global_index = 2*(k2 + local_o_start[2] + (k1 + local_o_start[1]) * no[2] + (k0 + local_o_start[0]) * no[2] * no[1]);
-        fine_grid_data[my_global_index] = out[m][0];
-        fine_grid_data[my_global_index] = out[m][1];
-        // if(out[m][0] != 0 || out[m][1] != 0)
-        //   pcout<<out[m][0]<<" "<<out[m][1]<<" ";
-        m = m+1;
+  for(ptrdiff_t i = 0; i<fine_grid_data.local_size(); i=i+2)
+  {
+    fine_grid_data[i] = out[m][0];
+    fine_grid_data[i+1] = out[m][1];
+    m=m+1;
+  }
+  pcout<<m<<std::endl;
 
-      }
-  pcout<<std::endl;
+
+  // for(ptrdiff_t k0=local_o_start[0]; k0 < local_no[0]; k0++)
+  //   for(ptrdiff_t k1=local_o_start[1]; k1 < local_no[1]; k1++)
+  //     for(ptrdiff_t k2=local_o_start[2]; k2 < local_no[2]; k2++)
+  //     {
+  //       ptrdiff_t my_global_index = 2*(k2 + local_o_start[2] + (k1 + local_o_start[1]) * no[2] + (k0 + local_o_start[0]) * no[2] * no[1]);
+  //       fine_grid_data[my_global_index] = out[m][0];
+  //       fine_grid_data[my_global_index] = out[m][1];
+  //       // if(out[m][0] != 0 || out[m][1] != 0)
+  //       //   pcout<<out[m][0]<<" "<<out[m][1]<<" ";
+  //       m = m+1;
+  //
+  //     }
+  // pcout<<std::endl;
 
 }
 
@@ -1374,7 +1394,7 @@ void BlackNUFFT::compute_fft_3d()
           //                    dummy, onembed,
           //                    1, 0,
           //                    FFTW_FORWARD, FFTW_ESTIMATE);
-          // fftw_execute(p);
+          fftw_execute(p);
           pcout<<"FORWARD FFT"<<std::endl;
 
         }
@@ -1407,7 +1427,7 @@ void BlackNUFFT::compute_fft_3d()
       {
       pfft_plan = pfft_plan_many_dft(
         3, complete_n, ni, no, howmany, PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
-        in, out, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE | PFFT_ESTIMATE);//PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
+        in, out, comm_cart_2d, PFFT_BACKWARD, PFFT_SHIFTED_IN | PFFT_SHIFTED_OUT | PFFT_TRANSPOSED_NONE | PFFT_ESTIMATE);//PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
         pcout<<"BACKWARD PFFT"<<std::endl;
         pfft_execute(pfft_plan);
       }
@@ -1415,12 +1435,14 @@ void BlackNUFFT::compute_fft_3d()
       {
         pfft_plan = pfft_plan_many_dft(
             3, complete_n, ni, no, howmany, PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
-            in, out, comm_cart_2d, PFFT_FORWARD, PFFT_TRANSPOSED_NONE | PFFT_ESTIMATE);// PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
+            in, out, comm_cart_2d, PFFT_FORWARD, PFFT_SHIFTED_IN | PFFT_SHIFTED_OUT | PFFT_TRANSPOSED_NONE | PFFT_ESTIMATE);// PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
         pcout<<"FORWARD PFFT"<<std::endl;
         pfft_execute(pfft_plan);
       }
       pfft_destroy_plan(pfft_plan);
       retrieve_pfft_result(out);
+      for(unsigned int i =0; i<alloc_local_pfft; ++i)
+        pcout<<i<<" "<<out[i][0]<<std::endl;
 
     }
   else
@@ -1926,15 +1948,17 @@ void BlackNUFFT::run()
   shift_data_for_fftw3d();
 
 
-  for(unsigned int i = 0; i<no[0]; ++i)
-  for(unsigned int j = 0; j<no[1]; ++j)
+  for(unsigned int i = local_o_start[0]; i<no[0]; ++i)
+  for(unsigned int j = local_o_start[1]; j<no[1]; ++j)
   {
-  for(unsigned int k = 0; k<no[2]; ++k)
+  for(unsigned int k = local_o_start[2]; k<no[2]; ++k)
   {
     if(fine_grid_data[2*((i+0) * no[1] * no[2] + (j+0) * no[2] + (k+0))] != 0.)
-      pcout<<i<<" "<<j<<" "<<k<<" "<<2*((i+0) * no[1] * no[2] + (j+0) * no[2] + (k+0))<<" "<<fine_grid_data[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))]<<std::endl;
+      pcout<<i<<" "<<j<<" "<<k<<" "<<2*((i+0) * no[1] * no[2] + (j+0) * no[2] + (k+0))<<" "<<fine_grid_data[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))]<<" "<<fine_grid_data[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))+1]<<std::endl;
   }
   }
+
+
 
   // for(unsigned int i = 0; i<ni[0]; ++i)
   // for(unsigned int j = 0; j<ni[1]; ++j)
