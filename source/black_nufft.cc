@@ -175,10 +175,21 @@ void BlackNUFFT::create_index_sets()
 
     for(unsigned int i=0; i<3; ++i)
       std::cout<<"PRE "<<ni[i]<<" "<<local_ni[i]<<" "<<local_i_start[i]<<" "<<no[i]<<" "<<local_no[i]<<" "<<local_o_start[i]<<" "<<std::endl;
+    // alloc_local_pfft = pfft_local_size_many_dft(3, complete_n, ni, no, howmany,
+    //     PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
+    //     comm_cart_2d, PFFT_TRANSPOSED_NONE,
+    //     local_ni, local_i_start, local_no, local_o_start);
+
     alloc_local_pfft = pfft_local_size_many_dft(3, complete_n, ni, no, howmany,
         PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
         comm_cart_2d, PFFT_SHIFTED_IN | PFFT_SHIFTED_OUT | PFFT_TRANSPOSED_NONE,
-        local_ni, local_i_start, local_no, local_o_start);
+        local_ni, local_i_start_shift, local_no, local_o_start_shift);
+
+    for(unsigned int i = 0; i<3; ++i)
+    {
+      local_i_start[i] = local_i_start_shift[i] + ni[i]/2;
+      local_o_start[i] = local_o_start_shift[i] + no[i]/2;
+    }
     // for(unsigned int i=0; i<oblock.size(); ++i)
     // {
     //   iblock[i]=ib[i];

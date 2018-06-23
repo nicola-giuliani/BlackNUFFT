@@ -177,8 +177,8 @@ private:
   types::global_dof_index nf1, nf2, nf3;
 
   ptrdiff_t input_offset[3], output_offset[3];
-  ptrdiff_t local_i_start[3], local_ni[3];
-  ptrdiff_t local_o_start[3], local_no[3];
+  ptrdiff_t local_i_start_shift[3], local_i_start[3], local_ni[3];
+  ptrdiff_t local_o_start_shift[3], local_o_start[3], local_no[3];
   ptrdiff_t local_n[3], ni[3], no[3], complete_n[3];
   std::vector<unsigned int> iblock, oblock;
 
