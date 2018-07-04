@@ -101,7 +101,7 @@ double errcomp(Vector<double> &fk0, Vector<double> &fk1,std::vector<Vector<doubl
       ealg += (fk1(k*2)-fk0(k*2))*(fk1(k*2)-fk0(k*2))+(fk1(k*2+1)-fk0(k*2+1))*(fk1(k*2+1)-fk0(k*2+1));
       std::complex<double> foo(fk1(k*2),fk1(k*2+1));
       salg += std::abs(foo)*std::abs(foo);
-       // std::cout<<ealg<<" "<<salg<<" "<<k<<std::endl;
+      // std::cout<<ealg<<" "<<salg<<" "<<k<<std::endl;
     }
   err = std::sqrt(ealg/salg);
   return err;
@@ -159,10 +159,16 @@ void my_function_pfft()
   np[0] = size;
   np[1] = 1;
 
-  ni[0] = 200; ni[1] = 200; ni[2] = 200;
-  no[0] = 100; no[1] = 100; no[2] = 100;
+  ni[0] = 200;
+  ni[1] = 200;
+  ni[2] = 200;
+  no[0] = 100;
+  no[1] = 100;
+  no[2] = 100;
 
-  complete_n[0] = 5000; complete_n[1] = 500; complete_n[2] = 500;
+  complete_n[0] = 5000;
+  complete_n[1] = 500;
+  complete_n[2] = 500;
 
   ptrdiff_t howmany = 1;
 
@@ -172,47 +178,47 @@ void my_function_pfft()
 
   std::cout<<" COMPUTING LOCAL SIZES "<<std::endl;
   alloc_local = pfft_local_size_many_dft(3, complete_n, ni, no, howmany,
-      PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
-      comm_cart_2d, PFFT_TRANSPOSED_NONE,
-      local_ni, local_i_start, local_no, local_o_start);
+                                         PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
+                                         comm_cart_2d, PFFT_TRANSPOSED_NONE,
+                                         local_ni, local_i_start, local_no, local_o_start);
 
   std::cout<<Utilities::MPI::this_mpi_process(comm_cart_2d)<<" "<<local_ni[0]*local_ni[1]*local_ni[2]<<" "<<alloc_local<<std::endl;
   std::cout<<Utilities::MPI::this_mpi_process(comm_cart_2d)<<" "<<local_no[0]*local_no[1]*local_no[2]<<" "<<alloc_local<<std::endl;
   std::cout<<Utilities::MPI::this_mpi_process(comm_cart_2d)<<" "<<complete_n[0]*complete_n[1]*complete_n[2]<<" "<<alloc_local<<std::endl;
-  pfft_complex * in;
+  pfft_complex *in;
   in = new pfft_complex[alloc_local];//[local_ni[0]*local_ni[1]*local_ni[2]];
-  pfft_complex * out;
+  pfft_complex *out;
   out = new pfft_complex[alloc_local];//[local_no[0]*local_no[1]*local_no[2]];
 
   std::cout<<" PLAN "<<std::endl;
   pfft_plan pfft_plan = pfft_plan_many_dft(
-    3, complete_n, ni, no, howmany, PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
-    in, out, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE | PFFT_ESTIMATE);//PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
+                          3, complete_n, ni, no, howmany, PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
+                          in, out, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE | PFFT_ESTIMATE);//PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
 
-    ptrdiff_t m = 0;
-    for(ptrdiff_t k0=0; k0 < local_ni[0]; k0++)
-      for(ptrdiff_t k1=0; k1 < local_ni[1]; k1++)
-        for(ptrdiff_t k2=0; k2 < local_ni[2]; k2++)
+  ptrdiff_t m = 0;
+  for (ptrdiff_t k0=0; k0 < local_ni[0]; k0++)
+    for (ptrdiff_t k1=0; k1 < local_ni[1]; k1++)
+      for (ptrdiff_t k2=0; k2 < local_ni[2]; k2++)
         {
           std::cout<<in[m][0]<<" + j "<<in[m][1]<<" , ";
           m = m+1;
         }
 
- std::cout<<std::endl<<" EXECUTE "<<std::endl;
- pfft_execute(pfft_plan);
- std::cout<<" FINISH "<<std::endl;
+  std::cout<<std::endl<<" EXECUTE "<<std::endl;
+  pfft_execute(pfft_plan);
+  std::cout<<" FINISH "<<std::endl;
   m = 0;
- for(ptrdiff_t k0=0; k0 < local_no[0]; k0++)
-   for(ptrdiff_t k1=0; k1 < local_no[1]; k1++)
-     for(ptrdiff_t k2=0; k2 < local_no[2]; k2++)
-     {
-       std::cout<<out[m][0]<<" + j "<<out[m][1]<<" , ";
-       m = m+1;
+  for (ptrdiff_t k0=0; k0 < local_no[0]; k0++)
+    for (ptrdiff_t k1=0; k1 < local_no[1]; k1++)
+      for (ptrdiff_t k2=0; k2 < local_no[2]; k2++)
+        {
+          std::cout<<out[m][0]<<" + j "<<out[m][1]<<" , ";
+          m = m+1;
 
-     }
+        }
 
 
- pfft_destroy_plan(pfft_plan);
+  pfft_destroy_plan(pfft_plan);
 
 }
 int main(int argc, char *argv[])
@@ -237,7 +243,7 @@ int main(int argc, char *argv[])
 
   types::global_dof_index nj = 84;//8;//6;//4;//3000000;//864000
   types::global_dof_index nk = 84;//8;//64;//3000000;//864
-  double epsilon = 1e-5;//9.9999999999999998E-017;
+  double epsilon = 1e-3;//9.9999999999999998E-017;
   double grid_limit = 1.;
   bool iflag = false;
 
@@ -374,19 +380,19 @@ int main(int argc, char *argv[])
     out_vec[j]=out_vec_ptr[j];
 
   // out_vec.print(std::cout);
-  if(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==0)
-{
-  input_vector_file = "try_fftw.txt";
-  std::ifstream in_vecty(input_vector_file.c_str());
-  out_vec1.block_read(in_vecty);
-  std::cout<<out_vec.size()<<out_vec1.size()<<std::endl;
-  double error = errcomp(out_vec, out_vec1, out_grid);
-  std::cout<<"error from FFTW version"<<std::endl;
-  std::cout<<error<<" "<<epsilon<<std::endl;
+  if (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)==0)
+    {
+      input_vector_file = "try_fftw.txt";
+      std::ifstream in_vecty(input_vector_file.c_str());
+      out_vec1.block_read(in_vecty);
+      std::cout<<out_vec.size()<<out_vec1.size()<<std::endl;
+      double error = errcomp(out_vec, out_vec1, out_grid);
+      std::cout<<"error from FFTW version"<<std::endl;
+      std::cout<<error<<" "<<epsilon<<std::endl;
 
-  for (auto j : out_vec.locally_owned_elements())
-      if(std::abs(out_vec[j]-out_vec1[j])>1e-13)
-        std::cout<<out_vec[j]<<" "<<out_vec1[j]<<std::endl;
+      for (auto j : out_vec.locally_owned_elements())
+        if (std::abs(out_vec[j]-out_vec1[j])>1e-13)
+          std::cout<<out_vec[j]<<" "<<out_vec1[j]<<std::endl;
     }
 
   // output_vector_file = "try_fftw.txt";
