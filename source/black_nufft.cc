@@ -1309,7 +1309,7 @@ void BlackNUFFT::prepare_pfft_array(pfft_complex *in)
     in[m][1] = (*input_grid_helper)[i+1];
     m=m+1;
   }
-  pcout<<m<<std::endl;
+  // pcout<<m<<std::endl;
 
 
 
@@ -1350,7 +1350,7 @@ void BlackNUFFT::retrieve_pfft_result(pfft_complex *out)
     fine_grid_data[i+1] = out[m][1];
     m=m+1;
   }
-  pcout<<m<<std::endl;
+  // pcout<<m<<std::endl;
 
 
   // for(ptrdiff_t k0=local_o_start[0]; k0 < local_no[0]; k0++)
@@ -1936,32 +1936,33 @@ void BlackNUFFT::run()
   // scaling_input_gridding();
   // // 6) Compute the 3d FFT using FFTW
 
-  for(unsigned int i = 0; i<ni[0]; ++i)
-  for(unsigned int j = 0; j<ni[1]; ++j)
-  {
-  for(unsigned int k = 0; k<ni[2]; ++k)
-  {
-    if((*input_grid_helper)[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))] != 0.)
-      pcout<<i<<" "<<j<<" "<<k<<" "<<2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))<<" "<<(*input_grid_helper)[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))]<<std::endl;
-  }
-  }
+  // for(unsigned int i = 0; i<ni[0]; ++i)
+  // for(unsigned int j = 0; j<ni[1]; ++j)
+  // {
+  // for(unsigned int k = 0; k<ni[2]; ++k)
+  // {
+  //   if((*input_grid_helper)[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))] != 0.)
+  //     pcout<<i<<" "<<j<<" "<<k<<" "<<2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))<<" "<<(*input_grid_helper)[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))]<<std::endl;
+  // }
+  // }
 
-  shift_data_before_fft();
+  if(fft_type == "PFFT")
+    shift_data_before_fft();
   compute_fft_3d();
   // 7) Local circular shifting
   if(fft_type == "FFTW")
     shift_data_after_fft();
 
 
-  for(unsigned int i = local_o_start[0]; i<no[0]; ++i)
-  for(unsigned int j = local_o_start[1]; j<no[1]; ++j)
-  {
-  for(unsigned int k = local_o_start[2]; k<no[2]; ++k)
-  {
-    if(fine_grid_data[2*((i+0) * no[1] * no[2] + (j+0) * no[2] + (k+0))] != 0.)
-      pcout<<i<<" "<<j<<" "<<k<<" "<<2*((i+0) * no[1] * no[2] + (j+0) * no[2] + (k+0))<<" "<<fine_grid_data[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))]<<" "<<fine_grid_data[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))+1]<<std::endl;
-  }
-  }
+  // for(unsigned int i = local_o_start[0]; i<no[0]; ++i)
+  // for(unsigned int j = local_o_start[1]; j<no[1]; ++j)
+  // {
+  // for(unsigned int k = local_o_start[2]; k<no[2]; ++k)
+  // {
+  //   if(fine_grid_data[2*((i+0) * no[1] * no[2] + (j+0) * no[2] + (k+0))] != 0.)
+  //     pcout<<i<<" "<<j<<" "<<k<<" "<<2*((i+0) * no[1] * no[2] + (j+0) * no[2] + (k+0))<<" "<<fine_grid_data[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))]<<" "<<fine_grid_data[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))+1]<<std::endl;
+  // }
+  // }
 
 
 
