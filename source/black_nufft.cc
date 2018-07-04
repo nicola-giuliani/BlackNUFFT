@@ -116,11 +116,11 @@ void BlackNUFFT::create_index_sets()
       // the output are included here. This will be the relevant index set for the distributed array.
       fftw3_output_set.set_size(2*nf3*nf2*nf1);
       types::global_dof_index ghost1, ghost2;
-      if (local_o_start[0]>nspread)
+      if (local_o_start[0]>=nspread)
         ghost1=nspread;
       else
         ghost1=0;//local_i_start[2];
-      if (no[0]-local_o_start[0]-local_no[0]>nspread)
+      if (no[0]-local_o_start[0]-local_no[0]>=nspread)
         ghost2=nspread;
       else
         ghost2=0;//nf3-local_i_start[0]-local_nf3;
@@ -224,11 +224,11 @@ void BlackNUFFT::create_index_sets()
     // the output are included here. This will be the relevant index set for the distributed array.
     pfft_output_set.set_size(no[0]*no[1]*no[2]*2);
     types::global_dof_index ghost1, ghost2;
-    if (local_o_start[0]>nspread)
+    if (local_o_start[0]>=nspread)
       ghost1=nspread;
     else
       ghost1=0;//local_i_start[0];
-    if (no[0]-local_o_start[0]-local_no[0]>nspread)
+    if (no[0]-local_o_start[0]-local_no[0]>=nspread)
       ghost2=nspread;
     else
       ghost2=0;//nf3-local_i_start[0]-local_nf3;
@@ -239,11 +239,11 @@ void BlackNUFFT::create_index_sets()
     pfft_output_set.compress();
 
     pfft_input_set.set_size(ni[0]*ni[1]*ni[2]*2);
-    if (local_i_start[0]>nspread)
+    if (local_i_start[0]>=nspread)
       ghost1=nspread;
     else
       ghost1=0;//local_i_start[0];
-    if (ni[0]-local_i_start[0]-local_ni[0]>nspread)
+    if (ni[0]-local_i_start[0]-local_ni[0]>=nspread)
       ghost2=nspread;
     else
       ghost2=0;//nf3-local_i_start[0]-local_nf3;
