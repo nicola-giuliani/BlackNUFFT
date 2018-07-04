@@ -182,13 +182,14 @@ void BlackNUFFT::create_index_sets()
 
     alloc_local_pfft = pfft_local_size_many_dft(3, complete_n, ni, no, howmany,
         PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
-        comm_cart_2d, PFFT_SHIFTED_IN | PFFT_SHIFTED_OUT | PFFT_TRANSPOSED_NONE,
+        comm_cart_2d, PFFT_TRANSPOSED_NONE | PFFT_ESTIMATE| PFFT_DESTROY_INPUT| PFFT_SHIFTED_IN | PFFT_SHIFTED_OUT,
         local_ni, local_i_start_shift, local_no, local_o_start_shift);
 
     for(unsigned int i = 0; i<3; ++i)
     {
       local_i_start[i] = local_i_start_shift[i] + ni[i]/2;
       local_o_start[i] = local_o_start_shift[i] + no[i]/2;
+      pcout<<"LOCAL STARTS "<<local_i_start_shift[i]<<" "<<local_o_start_shift[i]<<" "<<local_i_start[i]<<" "<<local_o_start[i]<<" "<<std::endl;
     }
     // for(unsigned int i=0; i<oblock.size(); ++i)
     // {
@@ -522,18 +523,18 @@ void BlackNUFFT::compute_tolerance_infos()
       input_offset[1] = int(double(nf2/2) - (xm[1])/hy) - nspread;
       input_offset[0] = int(double(nf3/2) - (xm[2])/hz) - nspread;
 
-      output_offset[2] = 0;//int(double(nf1/2) - (sm[0])/hs) - nspread;
-      output_offset[1] = 0;//int(double(nf2/2) - (sm[1])/ht) - nspread;
-      output_offset[0] = 0;//int(double(nf3/2) - (sm[2])/hu) - nspread;
+      output_offset[2] = int(double(nf1/2) - (sm[0])/hs) - nspread;
+      output_offset[1] = int(double(nf2/2) - (sm[1])/ht) - nspread;
+      output_offset[0] = int(double(nf3/2) - (sm[2])/hu) - nspread;
 
       // TODO RIFLETTERE SUL + 1 PER VIA DELLA NUMERAZIONE DA 0
       ni[2] = int(double(nf1/2) + (xm[0])/hx) - input_offset[0] + 1 + nspread;//+xb[0]
       ni[1] = int(double(nf2/2) + (xm[1])/hy) - input_offset[1] + 1 + nspread;//+xb[1]
       ni[0] = int(double(nf3/2) + (xm[2])/hz) - input_offset[2] + 1 + nspread;//+xb[2]
 
-      no[2] = nf1;//int(double(nf1/2) + (sm[0])/hs) - output_offset[0] + 1 + nspread;//+sb[0]
-      no[1] = nf2;//int(double(nf2/2) + (sm[1])/ht) - output_offset[1] + 1 + nspread;//+sb[1]
-      no[0] = nf3;//int(double(nf3/2) + (sm[2])/hu) - output_offset[2] + 1 + nspread;//+sb[2]
+      no[2] = int(double(nf1/2) + (sm[0])/hs) - output_offset[0] + 1 + nspread;//+sb[0]
+      no[1] = int(double(nf2/2) + (sm[1])/ht) - output_offset[1] + 1 + nspread;//+sb[1]
+      no[0] = int(double(nf3/2) + (sm[2])/hu) - output_offset[2] + 1 + nspread;//+sb[2]
 
       pcout<<input_offset[2]<<" "<<input_offset[1]<<" "<<input_offset[0]<<std::endl;
       pcout<<ni[2]<<" "<<ni[1]<<" "<<ni[0]<<std::endl;
@@ -1183,117 +1184,117 @@ void BlackNUFFT::scaling_input_gridding()
 }
 
 
-// TO BE REMOVED
-void BlackNUFFT::shift_data_before_fft()
-{
-  TimerOutput::Scope t(computing_timer, " Shift before FFT ");
-
-  // fine_grid_data.print(std::cout);
-  // fine_grid_data = 0.;
-  //   for(types::global_dof_index k3=0; k3<2*(iw9+nspread)+1; ++k3)
-  //   {
-  //     for(types::global_dof_index k2=0; k2<2*(iw8+nspread)+1; ++k2)
-  //     {
-  //       for(types::global_dof_index k1=0; k1<2*(iw7+nspread)+1; ++k1)
-  //       {
-  //           types::global_dof_index old_pos = 2*((nf3/2 + k3 - iw9 - nspread)*nf1*nf2 +
-  //                                             (nf2/2 + k2 - iw8 - nspread)*nf1 +
-  //                                             (nf1/2 + k1 - iw7 - nspread));
-  //           fine_grid_data[old_pos] = 1.;//fine_grid_data[new_pos];
-  //         fine_grid_data[old_pos+1] = 1.;//fine_grid_data[new_pos+1];
-  //
-  //       }
-  //     }
-  //   }
-
-  // THIS SEEMS TO BE ALMOST GOOD IF BACKWARD, ELSE USE -1^(i+j+k)
-  // std::cout<<"pippo"<<std::endl;
-  // for(types::global_dof_index k3=nf3/2; k3<nf3/2+1; k3=k3+1)
-  // {
-  //   std::cout<<fine_grid_data[2*(k3*nf1*nf2 + nf2/2*nf1 + nf1/2)+1]<<std::endl;
-  //
-  //   for(types::global_dof_index k2=0; k2<nf2; ++k2)
-  //   {
-  //     for(types::global_dof_index k1=0; k1<nf1; ++k1)
-  //     {
-  //       types::global_dof_index old_pos = 2*(k3*nf1*nf2 +
-  //                                         k2*nf1 +
-  //                                         k1)-1;
-  //
-  //       std::cout<<fine_grid_data[old_pos+1]<<" ";
-  //     }
-  //     std::cout<<std::endl;
-  //   }
-  // }
-
-  for (types::global_dof_index k3=0; k3<(nf3)/2; ++k3)
-    {
-      types::global_dof_index new_pos_3;
-      if (k3 >= nf3/2)
-        new_pos_3 = k3-nf3/2;
-      else
-        new_pos_3 = nf3/2 +k3;
-      if (k3 == 6)
-        std::cout<<new_pos_3<<std::endl;
-      for (types::global_dof_index k2=0; k2<(nf2); ++k2)
-        {
-          types::global_dof_index new_pos_2;
-          if (k2 >= nf2/2)
-            new_pos_2 = k2-nf2/2;
-          else
-            new_pos_2 = nf2/2 +k2;
-          for (types::global_dof_index k1=0; k1<(nf1); ++k1)
-            {
-              types::global_dof_index new_pos_1;
-              if (k1 >= nf1/2)
-                new_pos_1 = k1-nf1/2;
-              else
-                new_pos_1 = nf1/2 +k1;
-
-              types::global_dof_index old_pos = 2*((k3)*nf1*nf2 +
-                                                   (k2)*nf1 +
-                                                   (k1));
-              types::global_dof_index new_pos = 2*((new_pos_3)*nf1*nf2 +
-                                                   (new_pos_2)*nf1 +
-                                                   (new_pos_1));
-
-              // std::cout<<k3<<" "<<k2<<" "<<k1<<" "<<old_pos<<" "<<std::endl;
-              double foo_real = fine_grid_data [old_pos];
-              double foo_imag = fine_grid_data [old_pos+1];
-              // if(k3 == 6 && foo_imag != 0.)
-              //   std::cout<<fine_grid_data[old_pos+1]<<std::endl;
-              fine_grid_data[old_pos] = fine_grid_data[new_pos];
-              fine_grid_data[old_pos+1] = fine_grid_data[new_pos+1];
-              fine_grid_data[new_pos] = foo_real;
-              fine_grid_data[new_pos+1] = foo_imag;
-              // if(k3 == 6 && foo_imag != 0.)
-              //   std::cout<<old_pos<<" "<<foo_imag<<" "<<new_pos<<" "<<fine_grid_data[old_pos+1]<<std::endl;
-              // if(k3 == 6 && foo_imag != 0.)
-              //   std::cout<<fine_grid_data[old_pos+1]<<std::endl;
-
-            }
-        }
-    }
-  // std::cout<<"pippo"<<std::endl;
-  //
-  // for(types::global_dof_index k3=16; k3<17; k3=k3+1)
-  // {
-  //   for(types::global_dof_index k2=0; k2<nf2; ++k2)
-  //   {
-  //     for(types::global_dof_index k1=0; k1<nf1; ++k1)
-  //     {
-  //       types::global_dof_index old_pos = 2*(k3*nf1*nf2 +
-  //                                         k2*nf1 +
-  //                                         k1);
-  //
-  //       std::cout<<fine_grid_data[old_pos+1]<<" ";
-  //     }
-  //     std::cout<<std::endl;
-  //   }
-  // }
-
-
-}
+// // TO BE REMOVED
+// void BlackNUFFT::shift_data_before_fft()
+// {
+//   TimerOutput::Scope t(computing_timer, " Shift before FFT ");
+//
+//   // fine_grid_data.print(std::cout);
+//   // fine_grid_data = 0.;
+//   //   for(types::global_dof_index k3=0; k3<2*(iw9+nspread)+1; ++k3)
+//   //   {
+//   //     for(types::global_dof_index k2=0; k2<2*(iw8+nspread)+1; ++k2)
+//   //     {
+//   //       for(types::global_dof_index k1=0; k1<2*(iw7+nspread)+1; ++k1)
+//   //       {
+//   //           types::global_dof_index old_pos = 2*((nf3/2 + k3 - iw9 - nspread)*nf1*nf2 +
+//   //                                             (nf2/2 + k2 - iw8 - nspread)*nf1 +
+//   //                                             (nf1/2 + k1 - iw7 - nspread));
+//   //           fine_grid_data[old_pos] = 1.;//fine_grid_data[new_pos];
+//   //         fine_grid_data[old_pos+1] = 1.;//fine_grid_data[new_pos+1];
+//   //
+//   //       }
+//   //     }
+//   //   }
+//
+//   // THIS SEEMS TO BE ALMOST GOOD IF BACKWARD, ELSE USE -1^(i+j+k)
+//   // std::cout<<"pippo"<<std::endl;
+//   // for(types::global_dof_index k3=nf3/2; k3<nf3/2+1; k3=k3+1)
+//   // {
+//   //   std::cout<<fine_grid_data[2*(k3*nf1*nf2 + nf2/2*nf1 + nf1/2)+1]<<std::endl;
+//   //
+//   //   for(types::global_dof_index k2=0; k2<nf2; ++k2)
+//   //   {
+//   //     for(types::global_dof_index k1=0; k1<nf1; ++k1)
+//   //     {
+//   //       types::global_dof_index old_pos = 2*(k3*nf1*nf2 +
+//   //                                         k2*nf1 +
+//   //                                         k1)-1;
+//   //
+//   //       std::cout<<fine_grid_data[old_pos+1]<<" ";
+//   //     }
+//   //     std::cout<<std::endl;
+//   //   }
+//   // }
+//
+//   for (types::global_dof_index k3=0; k3<(nf3)/2; ++k3)
+//     {
+//       types::global_dof_index new_pos_3;
+//       if (k3 >= nf3/2)
+//         new_pos_3 = k3-nf3/2;
+//       else
+//         new_pos_3 = nf3/2 +k3;
+//       if (k3 == 6)
+//         std::cout<<new_pos_3<<std::endl;
+//       for (types::global_dof_index k2=0; k2<(nf2); ++k2)
+//         {
+//           types::global_dof_index new_pos_2;
+//           if (k2 >= nf2/2)
+//             new_pos_2 = k2-nf2/2;
+//           else
+//             new_pos_2 = nf2/2 +k2;
+//           for (types::global_dof_index k1=0; k1<(nf1); ++k1)
+//             {
+//               types::global_dof_index new_pos_1;
+//               if (k1 >= nf1/2)
+//                 new_pos_1 = k1-nf1/2;
+//               else
+//                 new_pos_1 = nf1/2 +k1;
+//
+//               types::global_dof_index old_pos = 2*((k3)*nf1*nf2 +
+//                                                    (k2)*nf1 +
+//                                                    (k1));
+//               types::global_dof_index new_pos = 2*((new_pos_3)*nf1*nf2 +
+//                                                    (new_pos_2)*nf1 +
+//                                                    (new_pos_1));
+//
+//               // std::cout<<k3<<" "<<k2<<" "<<k1<<" "<<old_pos<<" "<<std::endl;
+//               double foo_real = fine_grid_data [old_pos];
+//               double foo_imag = fine_grid_data [old_pos+1];
+//               // if(k3 == 6 && foo_imag != 0.)
+//               //   std::cout<<fine_grid_data[old_pos+1]<<std::endl;
+//               fine_grid_data[old_pos] = fine_grid_data[new_pos];
+//               fine_grid_data[old_pos+1] = fine_grid_data[new_pos+1];
+//               fine_grid_data[new_pos] = foo_real;
+//               fine_grid_data[new_pos+1] = foo_imag;
+//               // if(k3 == 6 && foo_imag != 0.)
+//               //   std::cout<<old_pos<<" "<<foo_imag<<" "<<new_pos<<" "<<fine_grid_data[old_pos+1]<<std::endl;
+//               // if(k3 == 6 && foo_imag != 0.)
+//               //   std::cout<<fine_grid_data[old_pos+1]<<std::endl;
+//
+//             }
+//         }
+//     }
+//   // std::cout<<"pippo"<<std::endl;
+//   //
+//   // for(types::global_dof_index k3=16; k3<17; k3=k3+1)
+//   // {
+//   //   for(types::global_dof_index k2=0; k2<nf2; ++k2)
+//   //   {
+//   //     for(types::global_dof_index k1=0; k1<nf1; ++k1)
+//   //     {
+//   //       types::global_dof_index old_pos = 2*(k3*nf1*nf2 +
+//   //                                         k2*nf1 +
+//   //                                         k1);
+//   //
+//   //       std::cout<<fine_grid_data[old_pos+1]<<" ";
+//   //     }
+//   //     std::cout<<std::endl;
+//   //   }
+//   // }
+//
+//
+// }
 
 
 void BlackNUFFT::prepare_pfft_array(pfft_complex *in)
@@ -1438,7 +1439,7 @@ void BlackNUFFT::compute_fft_3d()
       {
       pfft_plan = pfft_plan_many_dft(
         3, complete_n, ni, no, howmany, PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
-        in, out, comm_cart_2d, PFFT_BACKWARD, PFFT_SHIFTED_IN | PFFT_SHIFTED_OUT | PFFT_TRANSPOSED_NONE | PFFT_ESTIMATE);//PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
+        in, out, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE | PFFT_ESTIMATE| PFFT_DESTROY_INPUT| PFFT_SHIFTED_IN | PFFT_SHIFTED_OUT);//PFFT_TRANSPOSED_NONE| PFFT_ESTIMATE| PFFT_DESTROY_INPUT);
         pcout<<"BACKWARD PFFT"<<std::endl;
         pfft_execute(pfft_plan);
       }
@@ -1446,15 +1447,15 @@ void BlackNUFFT::compute_fft_3d()
       {
         pfft_plan = pfft_plan_many_dft(
             3, complete_n, ni, no, howmany, PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
-            in, out, comm_cart_2d, PFFT_FORWARD, PFFT_SHIFTED_IN | PFFT_SHIFTED_OUT | PFFT_TRANSPOSED_NONE | PFFT_ESTIMATE);// PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
+            in, out, comm_cart_2d, PFFT_FORWARD, PFFT_TRANSPOSED_NONE | PFFT_ESTIMATE| PFFT_DESTROY_INPUT| PFFT_SHIFTED_IN | PFFT_SHIFTED_OUT);// PFFT_TRANSPOSED_NONE| PFFT_ESTIMATE| PFFT_DESTROY_INPUT);
         pcout<<"FORWARD PFFT"<<std::endl;
         pfft_execute(pfft_plan);
       }
       pfft_destroy_plan(pfft_plan);
       retrieve_pfft_result(out);
-      for(unsigned int i =0; i<alloc_local_pfft; ++i)
-        pcout<<i<<" "<<out[i][0]<<std::endl;
-
+      // for(unsigned int i =0; i<alloc_local_pfft; ++i)
+      //   pcout<<i<<" "<<out[i][0]<<std::endl;
+      //
     }
   else
     {
@@ -1468,9 +1469,9 @@ void BlackNUFFT::compute_fft_3d()
 // to multiply each element by -1^(i+j+k). This is a local operation so we can use
 // TaskGroup withot caring on synchronisation.
 
-void BlackNUFFT::shift_data_for_fftw3d()
+void BlackNUFFT::shift_data_after_fft()
 {
-  TimerOutput::Scope t(computing_timer, " Shift Data for FFTW3D ");
+  TimerOutput::Scope t(computing_timer, " Shift Data after FFT ");
 
 
 
@@ -1500,73 +1501,54 @@ void BlackNUFFT::shift_data_for_fftw3d()
   types::global_dof_index blocking=10;
   tbb::parallel_for(blocked_range<types::global_dof_index> (local_o_start[0], local_no[0]+local_o_start[0],blocking), f_shift_tbb);
 
-
-
-  // Old implementation using TaskGroup
-  // auto f_shift_odd_start = [] (types::global_dof_index k3, parallel::distributed::Vector<double> &fine_grid_data_copy, const BlackNUFFT *foo_nufft)
-  // {
-  //
-  //   for (types::global_dof_index k2 = 0; k2 < (foo_nufft->nf2)*foo_nufft->nf1; k2=k2+2)
-  //     {
-  //       fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2)] *= -1;
-  //       fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2)+1] *= -1;
-  //
-  //     }
-  // };
-  // auto f_shift_even_start = [] (types::global_dof_index k3, parallel::distributed::Vector<double> &fine_grid_data_copy, const BlackNUFFT *foo_nufft)
-  // {
-  //
-  //   for (types::global_dof_index k2 = 0; k2 < foo_nufft->nf2; k2=k2+1)
-  //     {
-  //       for (types::global_dof_index k1 = 0; k1 < (foo_nufft->nf1); ++k1)
-  //         {
-  //
-  //           fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2)] *= -1;
-  //           fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2)+1] *= -1;
-  //
-  //         }
-  //     }
-  // };
-  // auto f_shift = [] (types::global_dof_index k3, parallel::distributed::Vector<double> &fine_grid_data_copy, const BlackNUFFT *foo_nufft)
-  // {
-  //   for (types::global_dof_index k2 = 0; k2 < (foo_nufft->nf2); ++k2)
-  //     {
-  //       // types::global_dof_index ii = (nf2/2+k2-nspread-iw8)*nf1 + (nf3/2+k3-nspread-iw9)*nf1*nf2;
-  //       for (types::global_dof_index k1 = 0; k1 < (foo_nufft->nf1); ++k1)
-  //         {
-  //           // types::global_dof_index istart = 2 * (ii+nf1/2+k1);
-  //           // types::global_dof_index is2 = 2 * (ii+nf1/2-k1);
-  //           // fine_grid_data[istart-1] = - fine_grid_data[istart-1];
-  //           // fine_grid_data[istart+1-1] = - fine_grid_data[istart+1-1];
-  //           // fine_grid_data[is2-1] = - fine_grid_data[is2-1];
-  //           // fine_grid_data[is2+1-1] = - fine_grid_data[is2+1-1];
-  //
-  //           double multi = -2*(double)((k3+k2+k1)%2)+1;
-  //           // std::cout<<multi<<" "<<std::pow(-1,k3+k2+k1) <<std::endl;
-  //           fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2*foo_nufft->nf1+k1)] *= multi;//std::pow(-1,k3+k2+k1);
-  //           fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2*foo_nufft->nf1+k1)+1] *= multi;//std::pow(-1,k3+k2+k1);
-  //           // fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2*foo_nufft->nf1+k1)] -= 2*fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2*foo_nufft->nf1+k1)];
-  //           // fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2*foo_nufft->nf1+k1)+1] -= 2*fine_grid_data_copy[2*(k3*foo_nufft->nf1*foo_nufft->nf2+k2*foo_nufft->nf1+k1)+1];
-  //
-  //
-  //         }
-  //
-  //     }
-  // };
-  // Threads::TaskGroup<> shift_data_group;
-  //
-  // for (types::global_dof_index k3 = local_i_start[0]; k3<(local_nf3+local_i_start[0]); ++k3)
-  //   {
-  //     shift_data_group += Threads::new_task ( static_cast<void (*)(types::global_dof_index, parallel::distributed::Vector<double> &, const BlackNUFFT *)> (f_shift), k3, fine_grid_data, this);
-  //   }
-  //
-  // shift_data_group.join_all();
-
   // Now we can distribute the results of the shifted 3d FFT.
   fine_grid_data.compress(VectorOperation::add);
   // We need to update the ghost values for a proper fast gaussian
   // gridding on the output array.
   fine_grid_data.update_ghost_values();
+  // pcout<<fine_grid_data.l2_norm()<<std::endl;
+
+}
+
+
+void BlackNUFFT::shift_data_before_fft()
+{
+  TimerOutput::Scope t(computing_timer, " Shift Data before FFT ");
+
+
+
+  // Given a set of index along the coarsest dimension it shifts them
+  auto f_shift_tbb = [this] (const blocked_range<types::global_dof_index> &r)
+  {
+    for (types::global_dof_index k3=r.begin(); k3<r.end(); ++k3)
+      for (types::global_dof_index k2 = local_i_start[1]; k2 < (local_ni[1]+local_i_start[1]); ++k2)
+        {
+          // types::global_dof_index ii = (nf2/2+k2-nspread-iw8)*nf1 + (nf3/2+k3-nspread-iw9)*nf1*nf2;
+          for (types::global_dof_index k1 = local_i_start[2]; k1 < (local_ni[2]+local_i_start[2]); ++k1)
+            {
+              double multi = -2*(double)(((k3+input_offset[2])+(k2+input_offset[1])+(k1+input_offset[0]))%2)+1;
+              //(local_no[1]+local_o_start[1]) = old nf2
+              //(local_no[2]+local_o_start[2]) = old nf1
+              (*input_grid_helper)[2*(k3*(local_ni[2]+local_i_start[2])*(local_ni[1]+local_i_start[1])+k2*(local_ni[2]+local_i_start[2])+k1)] *= multi;//std::pow(-1,k3+k2+k1);
+              (*input_grid_helper)[2*(k3*(local_ni[2]+local_i_start[2])*(local_ni[1]+local_i_start[1])+k2*(local_ni[2]+local_i_start[2])+k1)+1] *= multi;//std::pow(-1,k3+k2+k1);
+
+
+            }
+
+        }
+  };
+
+
+  // We need the shift only on the locally owned data.
+  types::global_dof_index blocking=10;
+  tbb::parallel_for(blocked_range<types::global_dof_index> (local_i_start[0], local_ni[0]+local_i_start[0],blocking), f_shift_tbb);
+
+
+  // Now we can distribute the results of the shifted 3d FFT.
+  input_grid_helper->compress(VectorOperation::add);
+  // We need to update the ghost values for a proper fast gaussian
+  // gridding on the output array.
+  input_grid_helper->update_ghost_values();
   // pcout<<fine_grid_data.l2_norm()<<std::endl;
 
 }
@@ -1954,9 +1936,21 @@ void BlackNUFFT::run()
   // scaling_input_gridding();
   // // 6) Compute the 3d FFT using FFTW
 
+  for(unsigned int i = 0; i<ni[0]; ++i)
+  for(unsigned int j = 0; j<ni[1]; ++j)
+  {
+  for(unsigned int k = 0; k<ni[2]; ++k)
+  {
+    if((*input_grid_helper)[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))] != 0.)
+      pcout<<i<<" "<<j<<" "<<k<<" "<<2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))<<" "<<(*input_grid_helper)[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))]<<std::endl;
+  }
+  }
+
+  shift_data_before_fft();
   compute_fft_3d();
   // 7) Local circular shifting
-  shift_data_for_fftw3d();
+  if(fft_type == "FFTW")
+    shift_data_after_fft();
 
 
   for(unsigned int i = local_o_start[0]; i<no[0]; ++i)
@@ -1971,15 +1965,6 @@ void BlackNUFFT::run()
 
 
 
-  // for(unsigned int i = 0; i<ni[0]; ++i)
-  // for(unsigned int j = 0; j<ni[1]; ++j)
-  // {
-  // for(unsigned int k = 0; k<ni[2]; ++k)
-  // {
-  //   if((*input_grid_helper)[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))] != 0.)
-  //     pcout<<i<<" "<<j<<" "<<k<<" "<<2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))<<" "<<(*input_grid_helper)[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))]<<std::endl;
-  // }
-  // }
 
   // fine_grid_data*=0;
   // fine_grid_data.add(1.);

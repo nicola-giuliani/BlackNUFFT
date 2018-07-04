@@ -116,7 +116,8 @@ private:
 
   /** This function performs a circular shift on the transformed array to obtain an overall shifted FFT.
   It is a local multiplication of -1.*/
-  void shift_data_for_fftw3d();
+  void shift_data_after_fft();
+  void shift_data_before_fft();
 
   /** This functions computes the gridding  from the distributed fine grid array  to
   the output vector. It allows for different gridding choices.*/
@@ -135,8 +136,6 @@ private:
   void prune_before();
 
   void prune_after();
-
-  void shift_data_before_fft();
 
   void compute_stubborn_fft();
 
