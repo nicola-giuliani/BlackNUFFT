@@ -1523,7 +1523,6 @@ void BlackNUFFT::shift_data_after_fft()
   fine_grid_data.compress(VectorOperation::add);
   // We need to update the ghost values for a proper fast gaussian
   // gridding on the output array.
-  fine_grid_data.update_ghost_values();
   // pcout<<fine_grid_data.l2_norm()<<std::endl;
 
 }
@@ -1954,13 +1953,32 @@ void BlackNUFFT::run()
   // scaling_input_gridding();
   // // 6) Compute the 3d FFT using FFTW
 
-  // for(unsigned int i = 0; i<ni[0]; ++i)
-  // for(unsigned int j = 0; j<ni[1]; ++j)
+  // if(this_mpi_process==0)
   // {
-  // for(unsigned int k = 0; k<ni[2]; ++k)
+  //   std::cout<<"BUBU "<<local_i_start[0]+local_ni[0]<<" "<<local_i_start[0]<<std::endl;
+  // for(unsigned int i = local_i_start[0]; i<local_i_start[0]+local_ni[0]; ++i)
+  // for(unsigned int j = local_i_start[1]; j<local_i_start[1]+local_ni[1]; ++j)
   // {
-  //   if((*input_grid_helper)[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))] != 0.)
-  //     pcout<<i<<" "<<j<<" "<<k<<" "<<2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))<<" "<<(*input_grid_helper)[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))]<<std::endl;
+  //   for(unsigned int k = local_i_start[2]; k<local_i_start[2]+local_ni[2]; ++k)
+  //   {
+  //     if((*input_grid_helper)[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))] != 0.)
+  //       std::cout<<i<<" "<<j<<" "<<k<<" "<<2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))<<" "<<(*input_grid_helper)[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))]<<std::endl;
+  //   }
+  // }
+  // }
+  // MPI_Barrier(mpi_communicator);
+  // if(this_mpi_process==1)
+  // {
+  //   std::cout<<"BUBU "<<local_i_start[0]+local_ni[0]<<" "<<local_i_start[0]<<std::endl;
+  //
+  // for(unsigned int i = local_i_start[0]; i<local_i_start[0]+local_ni[0]; ++i)
+  // for(unsigned int j = local_i_start[1]; j<local_i_start[1]+local_ni[1]; ++j)
+  // {
+  //   for(unsigned int k = local_i_start[2]; k<local_i_start[2]+local_ni[2]; ++k)
+  //   {
+  //     if((*input_grid_helper)[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))] != 0.)
+  //       std::cout<<i<<" "<<j<<" "<<k<<" "<<2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))<<" "<<(*input_grid_helper)[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))]<<std::endl;
+  //   }
   // }
   // }
 
@@ -1970,6 +1988,8 @@ void BlackNUFFT::run()
   // 7) Local circular shifting
   if(fft_type == "FFTW")
     shift_data_after_fft();
+  fine_grid_data.update_ghost_values();
+
 
 
   // for(unsigned int i = local_o_start[0]; i<no[0]; ++i)
