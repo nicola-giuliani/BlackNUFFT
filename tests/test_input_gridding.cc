@@ -86,7 +86,7 @@ void test()
   my_nufft.input_gridding();
   my_nufft.computing_timer.disable_output();
   my_nufft.compute_fft_3d();
-  my_nufft.shift_data_for_fftw3d();
+  my_nufft.shift_after_fftw3d();
   my_nufft.output_gridding();
   my_nufft.fine_grid_data.locally_owned_elements().print(std::cout);
   for (auto i : my_nufft.fine_grid_data.locally_owned_elements())
