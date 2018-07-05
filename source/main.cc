@@ -241,10 +241,10 @@ int main(int argc, char *argv[])
   std::cout<<threads<<std::endl;
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, threads);
 
-  types::global_dof_index nj = 864000;//84;//8;//6;//4;//3000000;//864000
-  types::global_dof_index nk = 864000;//84;//8;//64;//3000000;//864
+  types::global_dof_index nj = 2097152;//864000;//84;//8;//6;//4;//3000000;//864000
+  types::global_dof_index nk = 2097152;//864000;//84;//8;//64;//3000000;//864
   double epsilon = 1e-5;//9.9999999999999998E-017;
-  double grid_limit = 1.;
+  double grid_limit = 100.;
   bool iflag = false;
 
   // my_function_pfft();
@@ -352,7 +352,7 @@ int main(int argc, char *argv[])
     }
   std::cout<<Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)<<" "<<Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)<<std::endl;
   BlackNUFFT my_nufft(in_grid_ptr, in_vec_ptr, out_grid_ptr, out_vec_ptr);
-  my_nufft.init_nufft(epsilon, iflag, 10,"FGG","PFFT");
+  my_nufft.init_nufft(epsilon, iflag, 10,"FGG","FFTW");
 
   // my_nufft.test_data.reinit(40*40*40*2);//test for eps=1e-4
   // my_nufft.test_data_before.reinit(80*80*80*2);//test for eps=1e-4
