@@ -149,6 +149,46 @@ void create_initial_data(types::global_dof_index &nj, types::global_dof_index &n
 }
 
 
+void create_initial_data_random(types::global_dof_index &nj, types::global_dof_index &nk, std::vector<Vector<double> > &input_grid, Vector<double> &input_vector,std::vector<Vector<double> > &out_grid, double limit=100.)
+{
+  // types::signed_global_dof_index ms = nk/3;
+  // types::signed_global_dof_index mt = nk/3;
+  // types::signed_global_dof_index mu = nk/3;
+  std::cout<<"Creating initial data"<<std::endl;
+  types::signed_global_dof_index n1 = (types::signed_global_dof_index)std::cbrt(nj);
+  types::signed_global_dof_index n2 = (types::signed_global_dof_index)std::cbrt(nj);
+  types::signed_global_dof_index n3 = (types::signed_global_dof_index)std::cbrt(nj);
+  double grid_limit = limit;
+  double R = 1.;
+  double K = numbers::PI * grid_limit / R;
+  for (types::signed_global_dof_index k3 = -n3/2; k3<(n3-1)/2; ++k3)
+    {
+      for (types::signed_global_dof_index k2 = -n2/2; k2<(n2-1)/2; ++k2)
+        {
+          for (types::signed_global_dof_index k1 = -n1/2; k1<(n1-1)/2; ++k1)
+            {
+              types::global_dof_index j = 1+(k1+n1/2) + (k2+n2/2)*n1 + (k3+n3/2)*n1*n2;
+              input_grid[0][j-1] = R * (((double) rand() / (RAND_MAX)) + 1);//*numbers::PI*std::cos(-numbers::PI*((double)k1/n1));
+              input_grid[1][j-1] = R * (((double) rand() / (RAND_MAX)) + 1);//*numbers::PI*std::cos(-numbers::PI*((double)k2/n2));
+              input_grid[2][j-1] = R * (((double) rand() / (RAND_MAX)) + 1);//*numbers::PI*std::cos(-numbers::PI*((double)k3/n3));
+              //  dcmplx(dsin(pi*j/n1),dcos(pi*j/n2))
+              input_vector[2*(j-1)] = std::sin(numbers::PI*j/n1);
+              input_vector[2*(j-1)+1] = std::cos(numbers::PI*j/n2);
+
+            }
+        }
+    }
+  for (types::global_dof_index k1 = 1; k1 <= nk; ++k1)
+    {
+      out_grid[0][k1-1] = K* (((double) rand() / (RAND_MAX)) + 1);
+      out_grid[1][k1-1] = K* (((double) rand() / (RAND_MAX)) + 1);
+      out_grid[2][k1-1] = K* (((double) rand() / (RAND_MAX)) + 1);
+    }
+
+
+
+}
+
 void my_function_pfft()
 {
   ptrdiff_t np[2], complete_n[3], ni[3], no[3], local_ni[3], local_no[3], local_i_start[3], local_o_start[3], alloc_local;
