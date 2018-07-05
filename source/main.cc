@@ -354,7 +354,8 @@ int main(int argc, char *argv[])
         read_grid(out_grid,out_vec1,"../results_forward.txt");
     }
   else if (check_results==0)
-    create_initial_data(nj,nk,in_grid,in_vec,out_grid,grid_limit);
+    create_initial_data_random(nj,nk,in_grid,in_vec,out_grid,grid_limit);
+  // create_initial_data(nj,nk,in_grid,in_vec,out_grid,grid_limit);
 
 
   // for(unsigned int i=0; i<3; ++i)
