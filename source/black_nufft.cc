@@ -858,7 +858,7 @@ void BlackNUFFT::fast_gaussian_gridding_on_input()
 
 
   // We put the distributed vector in "standard mode" performing a compress operation.
-  fine_grid_data.compress(VectorOperation::add);
+  input_grid_helper->compress(VectorOperation::add);
 
 
   if (!fft_backward)
@@ -1532,7 +1532,7 @@ void BlackNUFFT::shift_data_before_fft()
 {
   TimerOutput::Scope t(computing_timer, " Shift Data before FFT ");
 
-  input_grid_helper->update_ghost_values();
+  // input_grid_helper->update_ghost_values();
   input_grid_helper->zero_out_ghosts();
 
   // Given a set of index along the coarsest dimension it shifts them
@@ -1563,7 +1563,7 @@ void BlackNUFFT::shift_data_before_fft()
 
 
   // Now we can distribute the results of the shifted 3d FFT.
-  input_grid_helper->compress(VectorOperation::add);
+  // input_grid_helper->compress(VectorOperation::add);
   // We need to update the ghost values for a proper fast gaussian
   // gridding on the output array.
   // pcout<<fine_grid_data.l2_norm()<<std::endl;
@@ -1959,28 +1959,28 @@ void BlackNUFFT::run()
     shift_data_before_fft();
 
 
-  std::string file_name_pre = "pre_fft_" + Utilities::int_to_string(n_mpi_processes) + ".txt";
-  std::ofstream pre;
-  pre.open (file_name_pre, std::ofstream::out | std::ofstream::app);
-
-  for (unsigned int p=0; p<n_mpi_processes; ++p)
-    {
-      if (this_mpi_process==p)
-        {
-          std::cout<<"BUBU "<<local_i_start[0]+local_ni[0]<<" "<<local_i_start[0]<<std::endl;
-
-          for (unsigned int i = local_i_start[0]; i<local_i_start[0]+local_ni[0]; ++i)
-            for (unsigned int j = local_i_start[1]; j<local_i_start[1]+local_ni[1]; ++j)
-              {
-                for (unsigned int k = local_i_start[2]; k<local_i_start[2]+local_ni[2]; ++k)
-                  {
-                    if ((*input_grid_helper)[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))] != 0.)
-                      pre<<i<<" "<<j<<" "<<k<<" "<<2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))<<" "<<(*input_grid_helper)[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))]<<std::endl;
-                  }
-              }
-        }
-      MPI_Barrier(mpi_communicator);
-    }
+  // std::string file_name_pre = "pre_fft_" + Utilities::int_to_string(n_mpi_processes) + ".txt";
+  // std::ofstream pre;
+  // pre.open (file_name_pre, std::ofstream::out | std::ofstream::app);
+  //
+  // for (unsigned int p=0; p<n_mpi_processes; ++p)
+  //   {
+  //     if (this_mpi_process==p)
+  //       {
+  //         std::cout<<"BUBU "<<local_i_start[0]+local_ni[0]<<" "<<local_i_start[0]<<std::endl;
+  //
+  //         for (unsigned int i = local_i_start[0]; i<local_i_start[0]+local_ni[0]; ++i)
+  //           for (unsigned int j = local_i_start[1]; j<local_i_start[1]+local_ni[1]; ++j)
+  //             {
+  //               for (unsigned int k = local_i_start[2]; k<local_i_start[2]+local_ni[2]; ++k)
+  //                 {
+  //                   // if ((*input_grid_helper)[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))] != 0.)
+  //                     pre<<i<<" "<<j<<" "<<k<<" "<<2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))<<" "<<(*input_grid_helper)[2*((i+0) * ni[1] * ni[2] + (j+0) * ni[2] + (k+0))]<<std::endl;
+  //                 }
+  //             }
+  //       }
+  //     MPI_Barrier(mpi_communicator);
+  //   }
   compute_fft_3d();
   // 7) Local circular shifting
   if (fft_type == "FFTW")
@@ -1988,28 +1988,28 @@ void BlackNUFFT::run()
   fine_grid_data.update_ghost_values();
 
 
-  std::string file_name_post = "post_fft_" + Utilities::int_to_string(n_mpi_processes) + ".txt";
-  std::ofstream post;
-  post.open (file_name_post, std::ofstream::out | std::ofstream::app);
-
-  for (unsigned int p=0; p<n_mpi_processes; ++p)
-    {
-      if (this_mpi_process==p)
-        {
-          std::cout<<"BIBI "<<local_o_start[0]<<" "<<local_o_start[1]<<" "<<local_o_start[2]<<" "<<std::endl;
-          for (unsigned int i = local_o_start[0]; i<local_no[0]+local_o_start[0]; ++i)
-            for (unsigned int j = local_o_start[1]; j<local_no[1]+local_o_start[1]; ++j)
-              {
-                for (unsigned int k = local_o_start[2]; k<local_no[2]+local_o_start[2]; ++k)
-                  {
-                    if (fine_grid_data[2*((i+0) * no[1] * no[2] + (j+0) * no[2] + (k+0))] != 0.)
-                      post<<i<<" "<<j<<" "<<k<<" "<<2*((i+0) * no[1] * no[2] + (j+0) * no[2] + (k+0))<<" "<<fine_grid_data[2*((i+0) * no[1] * no[2] + (j+0) * no[2] + (k+0))]<<" "<<fine_grid_data[2*((i+0) * no[1] * no[2] + (j+0) * no[2] + (k+0))+1]<<std::endl;
-                  }
-              }
-        }
-
-      MPI_Barrier(mpi_communicator);
-    }
+  // std::string file_name_post = "post_fft_" + Utilities::int_to_string(n_mpi_processes) + ".txt";
+  // std::ofstream post;
+  // post.open (file_name_post, std::ofstream::out | std::ofstream::app);
+  //
+  // for (unsigned int p=0; p<n_mpi_processes; ++p)
+  //   {
+  //     if (this_mpi_process==p)
+  //       {
+  //         std::cout<<"BIBI "<<local_o_start[0]<<" "<<local_o_start[1]<<" "<<local_o_start[2]<<" "<<std::endl;
+  //         for (unsigned int i = local_o_start[0]; i<local_no[0]+local_o_start[0]; ++i)
+  //           for (unsigned int j = local_o_start[1]; j<local_no[1]+local_o_start[1]; ++j)
+  //             {
+  //               for (unsigned int k = local_o_start[2]; k<local_no[2]+local_o_start[2]; ++k)
+  //                 {
+  //                   // if (fine_grid_data[2*((i+0) * no[1] * no[2] + (j+0) * no[2] + (k+0))] != 0.)
+  //                     post<<i<<" "<<j<<" "<<k<<" "<<2*((i+0) * no[1] * no[2] + (j+0) * no[2] + (k+0))<<" "<<fine_grid_data[2*((i+0) * no[1] * no[2] + (j+0) * no[2] + (k+0))]<<" "<<fine_grid_data[2*((i+0) * no[1] * no[2] + (j+0) * no[2] + (k+0))+1]<<std::endl;
+  //                 }
+  //             }
+  //       }
+  //
+  //     MPI_Barrier(mpi_communicator);
+  //   }
 
 
 
