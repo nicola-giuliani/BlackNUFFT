@@ -543,13 +543,13 @@ void BlackNUFFT::compute_tolerance_infos()
           output_offset[0] = int(double(nf3/2) - (sm[2])/hu) - nspread;
 
           // TODO RIFLETTERE SUL + 1 PER VIA DELLA NUMERAZIONE DA 0
-          ni[2] = int(double(nf1/2) + (xm[0])/hx) - input_offset[0] + 1 + nspread;//+xb[0]
-          ni[1] = int(double(nf2/2) + (xm[1])/hy) - input_offset[1] + 1 + nspread;//+xb[1]
-          ni[0] = int(double(nf3/2) + (xm[2])/hz) - input_offset[2] + 1 + nspread;//+xb[2]
+          ni[2] = nf1 - 2.* input_offset[2];//int(double(nf1/2) + (xm[0])/hx) - input_offset[0] + 1 + nspread;//+xb[0]
+          ni[1] = nf2 - 2.* input_offset[1];//int(double(nf2/2) + (xm[1])/hy) - input_offset[1] + 1 + nspread;//+xb[1]
+          ni[0] = nf3 - 2.* input_offset[0];//int(double(nf3/2) + (xm[2])/hz) - input_offset[2] + 1 + nspread;//+xb[2]
 
-          no[2] = int(double(nf1/2) + (sm[0])/hs) - output_offset[0] + 1 + nspread;//+sb[0]
-          no[1] = int(double(nf2/2) + (sm[1])/ht) - output_offset[1] + 1 + nspread;//+sb[1]
-          no[0] = int(double(nf3/2) + (sm[2])/hu) - output_offset[2] + 1 + nspread;//+sb[2]
+          no[2] = nf1 - 2.* output_offset[2];//int(double(nf1/2) + (sm[0])/hs) - output_offset[0] + 1 + nspread;//+sb[0]
+          no[1] = nf2 - 2.* output_offset[1];//int(double(nf2/2) + (sm[1])/ht) - output_offset[1] + 1 + nspread;//+sb[1]
+          no[0] = nf3 - 2.* output_offset[0];//int(double(nf3/2) + (sm[2])/hu) - output_offset[2] + 1 + nspread;//+sb[2]
 
           pcout<<input_offset[2]<<" "<<input_offset[1]<<" "<<input_offset[0]<<std::endl;
           pcout<<ni[2]<<" "<<ni[1]<<" "<<ni[0]<<std::endl;
