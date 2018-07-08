@@ -161,23 +161,31 @@ void create_initial_data_random(types::global_dof_index &nj, types::global_dof_i
   double grid_limit = limit;
   double R = 1.;
   double K = numbers::PI * grid_limit / R;
-  for (types::signed_global_dof_index k3 = -n3/2; k3<(n3-1)/2; ++k3)
-    {
-      for (types::signed_global_dof_index k2 = -n2/2; k2<(n2-1)/2; ++k2)
-        {
-          for (types::signed_global_dof_index k1 = -n1/2; k1<(n1-1)/2; ++k1)
-            {
-              types::global_dof_index j = 1+(k1+n1/2) + (k2+n2/2)*n1 + (k3+n3/2)*n1*n2;
-              input_grid[0][j-1] = R * (((double) rand() / (RAND_MAX)) + 1);//*numbers::PI*std::cos(-numbers::PI*((double)k1/n1));
-              input_grid[1][j-1] = R * (((double) rand() / (RAND_MAX)) + 1);//*numbers::PI*std::cos(-numbers::PI*((double)k2/n2));
-              input_grid[2][j-1] = R * (((double) rand() / (RAND_MAX)) + 1);//*numbers::PI*std::cos(-numbers::PI*((double)k3/n3));
-              //  dcmplx(dsin(pi*j/n1),dcos(pi*j/n2))
-              input_vector[2*(j-1)] = std::sin(numbers::PI*j/n1);
-              input_vector[2*(j-1)+1] = std::cos(numbers::PI*j/n2);
-
-            }
-        }
+  // for (types::signed_global_dof_index k3 = -n3/2; k3<(n3-1)/2; ++k3)
+  //   {
+  //     for (types::signed_global_dof_index k2 = -n2/2; k2<(n2-1)/2; ++k2)
+  //       {
+  //         for (types::signed_global_dof_index k1 = -n1/2; k1<(n1-1)/2; ++k1)
+  //           {
+  //             types::global_dof_index j = 1+(k1+n1/2) + (k2+n2/2)*n1 + (k3+n3/2)*n1*n2;
+  //             input_grid[0][j-1] = R * (((double) rand() / (RAND_MAX)) + 1);//*numbers::PI*std::cos(-numbers::PI*((double)k1/n1));
+  //             input_grid[1][j-1] = R * (((double) rand() / (RAND_MAX)) + 1);//*numbers::PI*std::cos(-numbers::PI*((double)k2/n2));
+  //             input_grid[2][j-1] = R * (((double) rand() / (RAND_MAX)) + 1);//*numbers::PI*std::cos(-numbers::PI*((double)k3/n3));
+  //             //  dcmplx(dsin(pi*j/n1),dcos(pi*j/n2))
+  //             input_vector[2*(j-1)] = std::sin(numbers::PI*j/n1);
+  //             input_vector[2*(j-1)+1] = std::cos(numbers::PI*j/n2);
+  //
+  //           }
+  //       }
     }
+
+  for (types::global_dof_index k1 = 1; k1 <= nj; ++k1)
+    {
+      out_grid[0][k1-1] = R* (((double) rand() / (RAND_MAX)) + 1);
+      out_grid[1][k1-1] = R* (((double) rand() / (RAND_MAX)) + 1);
+      out_grid[2][k1-1] = R* (((double) rand() / (RAND_MAX)) + 1);
+    }
+
   for (types::global_dof_index k1 = 1; k1 <= nk; ++k1)
     {
       out_grid[0][k1-1] = K* (((double) rand() / (RAND_MAX)) + 1);
