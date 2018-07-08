@@ -305,8 +305,19 @@ void BlackNUFFT::create_index_sets()
       // }
     }
   output_set.compress();
-  pcout<<" Input work Balance : "<<input_set.n_elements()<<" elements over "<<input_set.size()<<std::endl;
-  pcout<<" Output work Balance : "<<output_set.n_elements()<<" elements over "<<output_set.size()<<std::endl;
+  for(unsigned int i = 0; i<n_mpi_processes; ++i)
+  {
+    if(this_mpi_process==i)
+    {
+      std::cout<<" Processor "<<i<<std::endl;
+      std::cout<<" Input work Balance : "<<input_set.n_elements()<<" elements over "<<input_set.size()<<std::endl;
+      std::cout<<" Output work Balance : "<<output_set.n_elements()<<" elements over "<<output_set.size()<<std::endl;
+
+    }
+    MPI_Barrier(mpi_communicator);
+  }
+  // pcout<<" Input work Balance : "<<input_set.n_elements()<<" elements over "<<input_set.size()<<std::endl;
+  // pcout<<" Output work Balance : "<<output_set.n_elements()<<" elements over "<<output_set.size()<<std::endl;
 }
 
 // The following function creates the index sets stored in grid_sets to speed up
