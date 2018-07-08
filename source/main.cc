@@ -177,7 +177,7 @@ void create_initial_data_random(types::global_dof_index &nj, types::global_dof_i
   //
   //           }
   //       }
-    }
+    // }
 
   for (types::global_dof_index k1 = 1; k1 <= nj; ++k1)
     {
