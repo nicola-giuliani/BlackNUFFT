@@ -181,9 +181,9 @@ void create_initial_data_random(types::global_dof_index &nj, types::global_dof_i
 
   for (types::global_dof_index k1 = 1; k1 <= nj; ++k1)
     {
-      out_grid[0][k1-1] = R* (((double) rand() / (RAND_MAX)) + 1);
-      out_grid[1][k1-1] = R* (((double) rand() / (RAND_MAX)) + 1);
-      out_grid[2][k1-1] = R* (((double) rand() / (RAND_MAX)) + 1);
+      input_grid[0][k1-1] = R* (((double) rand() / (RAND_MAX)) + 1);
+      input_grid[1][k1-1] = R* (((double) rand() / (RAND_MAX)) + 1);
+      input_grid[2][k1-1] = R * (((double) k1 - nj)/nj*2.0 + 1.0);//(((double) rand() / (RAND_MAX)) + 1);
     }
 
   for (types::global_dof_index k1 = 1; k1 <= nk; ++k1)
