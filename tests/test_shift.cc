@@ -89,7 +89,7 @@ void test()
   for (auto i : my_nufft.fine_grid_data.locally_owned_elements())
     my_nufft.fine_grid_data[i]=1.;
 
-  my_nufft.shift_data_after_fft;
+  my_nufft.shift_data_after_fft();
 
 
   my_nufft.fine_grid_data.locally_owned_elements().print(std::cout);
