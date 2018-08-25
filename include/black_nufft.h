@@ -18,8 +18,9 @@
 #include <deal.II/base/types.h>
 #include <deal.II/base/timer.h>
 
+#ifdef NUFFT_WITH_PFFT
 #include <pfft.h>
-
+#endif
 
 #include <cmath>
 #include <iostream>
@@ -110,10 +111,12 @@ private:
   /** This function calls the MPI fft3d using the FFTW or PFFT package.*/
   void compute_fft_3d();
 
+
+#ifdef NUFFT_WITH_PFFT
   void prepare_pfft_array(pfft_complex *in);
 
   void retrieve_pfft_result(pfft_complex *out);
-
+#endif
   /** This function performs a circular shift on the transformed array to obtain an overall shifted FFT.
   It is a local multiplication of -1.*/
   void shift_data_after_fft();
