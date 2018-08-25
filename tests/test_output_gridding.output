@@ -1,4 +1,5 @@
 Using FGG as gridding tool and FFTW as backend FFT library
+ Processor 0
  Input work Balance : 64 elements over 64
  Output work Balance : 64 elements over 64
 {[0,15999]}
