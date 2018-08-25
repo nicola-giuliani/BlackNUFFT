@@ -93,12 +93,12 @@ void test()
 
 
   my_nufft.fine_grid_data.locally_owned_elements().print(std::cout);
-for (auto i : my_nufft.fine_grid_data.locally_owned_elements())
+  for (auto i : my_nufft.fine_grid_data.locally_owned_elements())
     std::cout<<my_nufft.fine_grid_data[i]<<" ";
-    std::cout<<std::endl;
+  std::cout<<std::endl;
 
 
-  }
+}
 
 int main (int argc, char **argv)
 {
