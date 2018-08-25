@@ -541,11 +541,11 @@ void BlackNUFFT::compute_tolerance_infos()
           no[1] = nf2;
           no[0] = nf3;
 
-          pcout<<no[2]<<" "<<no[1]<<" "<<no[0]<<std::endl;
-          pcout<<sm[0]<<" "<<sm[1]<<" "<<sm[2]<<std::endl;
-          pcout<<sb[0]<<" "<<sb[1]<<" "<<sb[2]<<std::endl;
-          pcout<<hs<<" "<<ht<<" "<<hu<<std::endl;
-          pcout<<nf1<<" "<<nf2<<" "<<nf3<<std::endl;
+          // pcout<<no[2]<<" "<<no[1]<<" "<<no[0]<<std::endl;
+          // pcout<<sm[0]<<" "<<sm[1]<<" "<<sm[2]<<std::endl;
+          // pcout<<sb[0]<<" "<<sb[1]<<" "<<sb[2]<<std::endl;
+          // pcout<<hs<<" "<<ht<<" "<<hu<<std::endl;
+          // pcout<<nf1<<" "<<nf2<<" "<<nf3<<std::endl;
 
 
         }
@@ -570,11 +570,11 @@ void BlackNUFFT::compute_tolerance_infos()
           no[1] = nf2 - 2.* output_offset[1];//int(double(nf2/2) + (sm[1])/ht) - output_offset[1] + 1 + nspread;//+sb[1]
           no[0] = nf3 - 2.* output_offset[0];//int(double(nf3/2) + (sm[2])/hu) - output_offset[2] + 1 + nspread;//+sb[2]
 
-          pcout<<input_offset[2]<<" "<<input_offset[1]<<" "<<input_offset[0]<<std::endl;
-          pcout<<ni[2]<<" "<<ni[1]<<" "<<ni[0]<<std::endl;
-          pcout<<output_offset[2]<<" "<<output_offset[1]<<" "<<output_offset[0]<<std::endl;
-          pcout<<no[2]<<" "<<no[1]<<" "<<no[0]<<std::endl;
-          pcout<<sm[0]<<" "<<sm[1]<<" "<<sm[2]<<std::endl;
+          // pcout<<input_offset[2]<<" "<<input_offset[1]<<" "<<input_offset[0]<<std::endl;
+          // pcout<<ni[2]<<" "<<ni[1]<<" "<<ni[0]<<std::endl;
+          // pcout<<output_offset[2]<<" "<<output_offset[1]<<" "<<output_offset[0]<<std::endl;
+          // pcout<<no[2]<<" "<<no[1]<<" "<<no[0]<<std::endl;
+          // pcout<<sm[0]<<" "<<sm[1]<<" "<<sm[2]<<std::endl;
           // pcout<<sb[0]<<" "<<sb[1]<<" "<<sb[2]<<std::endl;
           // pcout<<hs<<" "<<ht<<" "<<hu<<std::endl;
           // pcout<<nf1<<" "<<nf2<<" "<<nf3<<std::endl;
