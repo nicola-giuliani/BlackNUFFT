@@ -2,7 +2,7 @@
 // #include "fftw3.h"
 #include <iostream>
 #include <fstream>
-#include <pfft.h>
+// #include <pfft.h>
 
 void read_grid(std::vector<Vector<double> > &input_grid, Vector<double> &input_vector, std::string filename)
 {
@@ -177,7 +177,7 @@ void create_initial_data_random(types::global_dof_index &nj, types::global_dof_i
   //
   //           }
   //       }
-    // }
+  // }
 
   for (types::global_dof_index k1 = 1; k1 <= nj; ++k1)
     {
@@ -197,78 +197,79 @@ void create_initial_data_random(types::global_dof_index &nj, types::global_dof_i
 
 }
 
-void my_function_pfft()
-{
-  ptrdiff_t np[2], complete_n[3], ni[3], no[3], local_ni[3], local_no[3], local_i_start[3], local_o_start[3], alloc_local;
-  int size;
-  MPI_Comm comm_cart_2d;
+// void my_function_pfft()
+// {
+//   ptrdiff_t np[2], complete_n[3], ni[3], no[3], local_ni[3], local_no[3], local_i_start[3], local_o_start[3], alloc_local;
+//   int size;
+//   MPI_Comm comm_cart_2d;
+//
+//   MPI_Comm_size(MPI_COMM_WORLD, &size);
+//   np[0] = size;
+//   np[1] = 1;
+//
+//   ni[0] = 200;
+//   ni[1] = 200;
+//   ni[2] = 200;
+//   no[0] = 100;
+//   no[1] = 100;
+//   no[2] = 100;
+//
+//   complete_n[0] = 5000;
+//   complete_n[1] = 500;
+//   complete_n[2] = 500;
+//
+//   ptrdiff_t howmany = 1;
+//
+//   std::cout<<" CREATING PROC MESH "<<std::endl;
+//   pfft_create_procmesh_2d(MPI_COMM_WORLD, np[0], np[1], &comm_cart_2d);
+//
+//
+//   std::cout<<" COMPUTING LOCAL SIZES "<<std::endl;
+//   alloc_local = pfft_local_size_many_dft(3, complete_n, ni, no, howmany,
+//                                          PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
+//                                          comm_cart_2d, PFFT_TRANSPOSED_NONE,
+//                                          local_ni, local_i_start, local_no, local_o_start);
+//
+//   std::cout<<Utilities::MPI::this_mpi_process(comm_cart_2d)<<" "<<local_ni[0]*local_ni[1]*local_ni[2]<<" "<<alloc_local<<std::endl;
+//   std::cout<<Utilities::MPI::this_mpi_process(comm_cart_2d)<<" "<<local_no[0]*local_no[1]*local_no[2]<<" "<<alloc_local<<std::endl;
+//   std::cout<<Utilities::MPI::this_mpi_process(comm_cart_2d)<<" "<<complete_n[0]*complete_n[1]*complete_n[2]<<" "<<alloc_local<<std::endl;
+//   pfft_complex *in;
+//   in = new pfft_complex[alloc_local];//[local_ni[0]*local_ni[1]*local_ni[2]];
+//   pfft_complex *out;
+//   out = new pfft_complex[alloc_local];//[local_no[0]*local_no[1]*local_no[2]];
+//
+//   std::cout<<" PLAN "<<std::endl;
+//   pfft_plan pfft_plan = pfft_plan_many_dft(
+//                           3, complete_n, ni, no, howmany, PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
+//                           in, out, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE | PFFT_ESTIMATE);//PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
+//
+//   ptrdiff_t m = 0;
+//   for (ptrdiff_t k0=0; k0 < local_ni[0]; k0++)
+//     for (ptrdiff_t k1=0; k1 < local_ni[1]; k1++)
+//       for (ptrdiff_t k2=0; k2 < local_ni[2]; k2++)
+//         {
+//           std::cout<<in[m][0]<<" + j "<<in[m][1]<<" , ";
+//           m = m+1;
+//         }
+//
+//   std::cout<<std::endl<<" EXECUTE "<<std::endl;
+//   pfft_execute(pfft_plan);
+//   std::cout<<" FINISH "<<std::endl;
+//   m = 0;
+//   for (ptrdiff_t k0=0; k0 < local_no[0]; k0++)
+//     for (ptrdiff_t k1=0; k1 < local_no[1]; k1++)
+//       for (ptrdiff_t k2=0; k2 < local_no[2]; k2++)
+//         {
+//           std::cout<<out[m][0]<<" + j "<<out[m][1]<<" , ";
+//           m = m+1;
+//
+//         }
+//
+//
+//   pfft_destroy_plan(pfft_plan);
+//
+// }
 
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
-  np[0] = size;
-  np[1] = 1;
-
-  ni[0] = 200;
-  ni[1] = 200;
-  ni[2] = 200;
-  no[0] = 100;
-  no[1] = 100;
-  no[2] = 100;
-
-  complete_n[0] = 5000;
-  complete_n[1] = 500;
-  complete_n[2] = 500;
-
-  ptrdiff_t howmany = 1;
-
-  std::cout<<" CREATING PROC MESH "<<std::endl;
-  pfft_create_procmesh_2d(MPI_COMM_WORLD, np[0], np[1], &comm_cart_2d);
-
-
-  std::cout<<" COMPUTING LOCAL SIZES "<<std::endl;
-  alloc_local = pfft_local_size_many_dft(3, complete_n, ni, no, howmany,
-                                         PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
-                                         comm_cart_2d, PFFT_TRANSPOSED_NONE,
-                                         local_ni, local_i_start, local_no, local_o_start);
-
-  std::cout<<Utilities::MPI::this_mpi_process(comm_cart_2d)<<" "<<local_ni[0]*local_ni[1]*local_ni[2]<<" "<<alloc_local<<std::endl;
-  std::cout<<Utilities::MPI::this_mpi_process(comm_cart_2d)<<" "<<local_no[0]*local_no[1]*local_no[2]<<" "<<alloc_local<<std::endl;
-  std::cout<<Utilities::MPI::this_mpi_process(comm_cart_2d)<<" "<<complete_n[0]*complete_n[1]*complete_n[2]<<" "<<alloc_local<<std::endl;
-  pfft_complex *in;
-  in = new pfft_complex[alloc_local];//[local_ni[0]*local_ni[1]*local_ni[2]];
-  pfft_complex *out;
-  out = new pfft_complex[alloc_local];//[local_no[0]*local_no[1]*local_no[2]];
-
-  std::cout<<" PLAN "<<std::endl;
-  pfft_plan pfft_plan = pfft_plan_many_dft(
-                          3, complete_n, ni, no, howmany, PFFT_DEFAULT_BLOCKS, PFFT_DEFAULT_BLOCKS,
-                          in, out, comm_cart_2d, PFFT_BACKWARD, PFFT_TRANSPOSED_NONE | PFFT_ESTIMATE);//PFFT_TRANSPOSED_NONE| PFFT_MEASURE| PFFT_DESTROY_INPUT);
-
-  ptrdiff_t m = 0;
-  for (ptrdiff_t k0=0; k0 < local_ni[0]; k0++)
-    for (ptrdiff_t k1=0; k1 < local_ni[1]; k1++)
-      for (ptrdiff_t k2=0; k2 < local_ni[2]; k2++)
-        {
-          std::cout<<in[m][0]<<" + j "<<in[m][1]<<" , ";
-          m = m+1;
-        }
-
-  std::cout<<std::endl<<" EXECUTE "<<std::endl;
-  pfft_execute(pfft_plan);
-  std::cout<<" FINISH "<<std::endl;
-  m = 0;
-  for (ptrdiff_t k0=0; k0 < local_no[0]; k0++)
-    for (ptrdiff_t k1=0; k1 < local_no[1]; k1++)
-      for (ptrdiff_t k2=0; k2 < local_no[2]; k2++)
-        {
-          std::cout<<out[m][0]<<" + j "<<out[m][1]<<" , ";
-          m = m+1;
-
-        }
-
-
-  pfft_destroy_plan(pfft_plan);
-
-}
 int main(int argc, char *argv[])
 {
 
@@ -289,8 +290,8 @@ int main(int argc, char *argv[])
   std::cout<<threads<<std::endl;
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, threads);
 
-  types::global_dof_index nj = 10000000;//864000;//84;//8;//6;//4;//3000000;//864000 2097152
-  types::global_dof_index nk = 10000000;//864000;//84;//8;//64;//3000000;//864 2097152
+  types::global_dof_index nj = 864000;//10000000;//864000;//84;//8;//6;//4;//3000000;//864000 2097152
+  types::global_dof_index nk = 864000;//10000000;//864000;//84;//8;//64;//3000000;//864 2097152
   double epsilon = 1e-5;//9.9999999999999998E-017;
   double grid_limit = 100.;
   bool iflag = false;
@@ -363,7 +364,7 @@ int main(int argc, char *argv[])
     }
   else if (check_results==0)
     // create_initial_data_random(nj,nk,in_grid,in_vec,out_grid,grid_limit);
-  create_initial_data(nj,nk,in_grid,in_vec,out_grid,grid_limit);
+    create_initial_data(nj,nk,in_grid,in_vec,out_grid,grid_limit);
 
 
   // for(unsigned int i=0; i<3; ++i)

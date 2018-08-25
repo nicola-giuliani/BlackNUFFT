@@ -1,8 +1,7 @@
 #include "black_nufft.h"
 #include "fftw3.h"
 #include "fftw3-mpi.h"
-// #include <pfft.h>
-// #include <pnfft.h>
+
 #include <deal.II/base/exceptions.h>
 
 using namespace tbb;
@@ -72,6 +71,11 @@ void BlackNUFFT::init_nufft(double eps, bool fft_bool, unsigned int tbb_granular
   fft_type = fft_input;
   tbb_granularity = tbb_granularity_in;
   pcout<<"Using "<<gridding<<" as gridding tool and "<<fft_type<<" as backend FFT library"<<std::endl;
+  // #ifndef NUFFT_WITH_PFFT
+  // if(fft_type=="PFFT")
+  //   AssertThrow(false, ExcMessage("To use PFFT as FFT library you must specify it at compile time"));
+  // #endif
+
 }
 
 
@@ -153,7 +157,7 @@ void BlackNUFFT::create_index_sets()
   else if (fft_type == "PFFT")
     {
 
-
+#ifdef NUFFT_WITH_PFFT
       ptrdiff_t tmp_local_nf3, tmp_local_i_start[2], howmany;
       ptrdiff_t local_n[3], local_start[3];
       ptrdiff_t np[2];
@@ -277,10 +281,13 @@ void BlackNUFFT::create_index_sets()
 
         }
       input_set.compress();
+#else
+      AssertThrow(false, ExcMessage("To use PFFT you must specify NUFFT_WITH_PFFT at compile time"))
+#endif
     }
   else
     {
-      AssertThrow(true, ExcNotImplemented());
+      AssertThrow(false, ExcNotImplemented());
     }
   // We create the additional input sets needed by the accelerating version of the gridding.
   // fft_input_set.print(std::cout);
@@ -305,17 +312,17 @@ void BlackNUFFT::create_index_sets()
       // }
     }
   output_set.compress();
-  for(unsigned int i = 0; i<n_mpi_processes; ++i)
-  {
-    if(this_mpi_process==i)
+  for (unsigned int i = 0; i<n_mpi_processes; ++i)
     {
-      std::cout<<" Processor "<<i<<std::endl;
-      std::cout<<" Input work Balance : "<<input_set.n_elements()<<" elements over "<<input_set.size()<<std::endl;
-      std::cout<<" Output work Balance : "<<output_set.n_elements()<<" elements over "<<output_set.size()<<std::endl;
+      if (this_mpi_process==i)
+        {
+          std::cout<<" Processor "<<i<<std::endl;
+          std::cout<<" Input work Balance : "<<input_set.n_elements()<<" elements over "<<input_set.size()<<std::endl;
+          std::cout<<" Output work Balance : "<<output_set.n_elements()<<" elements over "<<output_set.size()<<std::endl;
 
+        }
+      MPI_Barrier(mpi_communicator);
     }
-    MPI_Barrier(mpi_communicator);
-  }
   // pcout<<" Input work Balance : "<<input_set.n_elements()<<" elements over "<<input_set.size()<<std::endl;
   // pcout<<" Output work Balance : "<<output_set.n_elements()<<" elements over "<<output_set.size()<<std::endl;
 }
@@ -544,6 +551,7 @@ void BlackNUFFT::compute_tolerance_infos()
         }
       else if (fft_type=="PFFT")
         {
+#ifdef NUFFT_WITH_PFFT
           input_offset[2] = int(double(nf1/2) - (xm[0])/hx) - nspread;
           // pcout<<" MM "<<double(nf1/2)<<" "<<xm[0]<<" "<<hx<<std::endl;
           input_offset[1] = int(double(nf2/2) - (xm[1])/hy) - nspread;
@@ -572,9 +580,12 @@ void BlackNUFFT::compute_tolerance_infos()
           // pcout<<nf1<<" "<<nf2<<" "<<nf3<<std::endl;
 
           // pcout<<int(double(nf1/2) + (sm[0]+sb[0])/hs)<<" "<<int(double(nf2/2) + (sm[1]+sb[1])/ht)<<" "<<int(double(nf3/2) + (sm[2]+sb[2])/hu)<<" "<<nspread<<std::endl;
+#else
+          AssertThrow(false, ExcMessage("To use PFFT as FFT library you must specify NUFFT_WITH_PFFT at compile time"));
+#endif
         }
       else
-        AssertThrow(true, ExcNotImplemented());
+        AssertThrow(false, ExcNotImplemented());
     }
 
 }
@@ -653,7 +664,7 @@ void BlackNUFFT::input_gridding()
     }
   else if (gridding == "MINMAX")
     {
-      AssertThrow(true, ExcNotImplemented())
+      AssertThrow(false, ExcNotImplemented())
     }
 }
 
@@ -668,7 +679,7 @@ void BlackNUFFT::output_gridding()
     }
   else if (gridding == "MINMAX")
     {
-      AssertThrow(true, ExcNotImplemented())
+      AssertThrow(false, ExcNotImplemented())
     }
 }
 
@@ -1325,7 +1336,7 @@ void BlackNUFFT::scaling_input_gridding()
 //
 // }
 
-
+#ifdef NUFFT_WITH_PFFT
 void BlackNUFFT::prepare_pfft_array(pfft_complex *in)
 {
 // grid_data_input -> in
@@ -1397,7 +1408,7 @@ void BlackNUFFT::retrieve_pfft_result(pfft_complex *out)
   // pcout<<std::endl;
 
 }
-
+#endif
 // This function computes the 3d fft on the fine array. We have chosen to use
 // the state of the art FFTW library.
 void BlackNUFFT::compute_fft_3d()
@@ -1444,6 +1455,7 @@ void BlackNUFFT::compute_fft_3d()
     }
   else if (fft_type == "PFFT")
     {
+#ifdef NUFFT_WITH_PFFT
       pfft_complex *in, *out;
       pfft_plan pfft_plan=NULL;
       ptrdiff_t howmany = 1;
@@ -1485,10 +1497,13 @@ void BlackNUFFT::compute_fft_3d()
       // for(unsigned int i =0; i<alloc_local_pfft; ++i)
       //   pcout<<i<<" "<<out[i][0]<<std::endl;
       //
+#else
+      AssertThrow(false, ExcMessage("If you want to use PFFT you must specify NUFFT_WITH_PFFT at compile time"));
+#endif
     }
   else
     {
-      AssertThrow(true, ExcNotImplemented());
+      AssertThrow(false, ExcNotImplemented());
     }
 
 }
