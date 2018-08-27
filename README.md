@@ -56,3 +56,26 @@ Finally
 	
 at this point in the build directory you have both the shared library of BlackNUFFT and an executable ready to use
 
+## Compiling with PFFT
+
+We offer the possibility of using PFFT as back-end FFT library. We use the package manager spack to install PFFT
+
+	spack install pfft
+
+and afterwards it is sufficient to load such dependencies using
+
+	spack load pfft
+	
+alternatively PFFT can be compiled using the instructions reported [here](https://www-user.tu-chemnitz.de/~potts/workgroup/pippig/software.php.en)
+
+	git clone https://github.com/nicola-giuliani/BlackNUFFT.git
+	cd BlackNUFFT
+	mkdir build
+	cd build
+	export -DFFTW_DIR=/path_to_fftw_install_dir/
+	export -DPFFT_DIR=/path_to_pfft_install_dir/
+	cmake ../ -DNUFFT_WITH_PFFT=ON
+	make 
+
+
+
