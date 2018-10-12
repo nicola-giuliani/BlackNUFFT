@@ -55,7 +55,7 @@ public:
 
   /** Class constructor, we need the input - output grids and the relative vectors. We require
   an MPI communicator to set up the distributed fine grid vector. By default we consider MPI_COMM_WORLD*/
-  void init_nufft(double eps, bool fft_bool, unsigned int tbb_granularity_in=10, std::string gridding_input="FGG", std::string fft_input="FFTW");
+  void init_nufft(double eps, bool fft_bool, unsigned int tbb_granularity_in=10, std::string gridding_input="FGG", std::string fft_input="FFTW", bool output_summary=true);
 
   /** The driver of the function. It calls all the needed function of the private part*/
   void run();
@@ -223,6 +223,8 @@ private:
   unsigned int n_mpi_processes, this_mpi_process;
 
   ConditionalOStream pcout;
+
+  bool print_summary;
 
 
 public:

@@ -55,7 +55,7 @@ BlackNUFFT::BlackNUFFT(const std::vector<std::vector<double> > &in_grid, const s
 // A simple initialiser that resizes the grid parameters and the number of points.
 // We have put an Assert to check that the requested tolerance is right.
 
-void BlackNUFFT::init_nufft(double eps, bool fft_bool, unsigned int tbb_granularity_in, std::string gridding_input, std::string fft_input)
+void BlackNUFFT::init_nufft(double eps, bool fft_bool, unsigned int tbb_granularity_in, std::string gridding_input, std::string fft_input, bool output_summary)
 {
   TimerOutput::Scope t(computing_timer, " Initialisation ");
   nj = input_grid[0].size();
@@ -70,6 +70,7 @@ void BlackNUFFT::init_nufft(double eps, bool fft_bool, unsigned int tbb_granular
   gridding = gridding_input;
   fft_type = fft_input;
   tbb_granularity = tbb_granularity_in;
+  print_summary = output_summary;
   pcout<<"Using "<<gridding<<" as gridding tool and "<<fft_type<<" as backend FFT library"<<std::endl;
   // #ifndef NUFFT_WITH_PFFT
   // if(fft_type=="PFFT")
@@ -2046,7 +2047,9 @@ void BlackNUFFT::run()
   // // 9) Deconvolution to correct the First FGG (4)
   // scaling_output_gridding();
   // fine_grid_data.reinit(0);
-  computing_timer.print_summary ();
+
+  if(print_summary)
+    computing_timer.print_summary ();
   computing_timer.reset ();
 
 }
