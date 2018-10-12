@@ -615,7 +615,7 @@ void BlackNUFFT::compute_ranges()
 
       xb[i] = (t1+t2) / 2.;
       xm[i] = std::max(t2-xb[i],-t1+xb[i]);  //max(abs(t2-xb),abs(t1-xb))
-
+      pcout<<"INPUT RANGE "<<xb[i]<<" "<<xm[i]<<std::endl;
     }
 
   // COMPUTE LOCAL_I_START E LOCAL_I (usa i range)
@@ -636,6 +636,7 @@ void BlackNUFFT::compute_ranges()
         }
       sb[i] = (t1+t2) / 2.;
       sm[i] = std::max(t2-sb[i],-t1+sb[i]);  //max(abs(t2-xb),abs(t1-xb))
+      pcout<<"OUTPUT RANGE "<<sb[i]<<" "<<sm[i]<<std::endl;
     }
   // pcout<<xb[0]<<" "<<xb[1]<<" "<<xb[2]<<std::endl;
   // pcout<<xm[0]<<" "<<xm[1]<<" "<<xm[2]<<std::endl;
