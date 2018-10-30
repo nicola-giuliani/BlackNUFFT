@@ -1,7 +1,7 @@
 
 <p align="center">
   <a href="http://mathlab.github.io/ITHACA-FV/" target="_blank" >
-    <img alt="BlackNUFFT" src="./docs/logo/logo.png" width="300" />
+    <img alt="BlackNUFFT" src="./docs/logo/logo.png" width="200" />
   </a>
 </p>
 
@@ -63,3 +63,24 @@ Finally
 	
 at this point in the build directory you have both the shared library of BlackNUFFT and an executable ready to use
 
+
+#Cite this work
+
+If you use this software, please consider citing the following work:
+
+	@article{Giuliani2018,
+	doi = {10.1016/j.cpc.2018.10.005},
+	url = {https://doi.org/10.1016/j.cpc.2018.10.005},
+	year  = {2018},
+	month = {oct},
+	publisher = {Elsevier {BV}},
+	author = {Nicola Giuliani},
+	title = {{BlackNUFFT}: Modular customizable black box hybrid parallelization of type 3 {NUFFT} in 3D},
+	journal = {Computer Physics Communications}
+	}
+
+
+
+#Licence
+
+Please see the file [LICENSE](https://github.com/nicola-giuliani/BlackNUFFT/blob/master/LICENSE) for details
