@@ -66,7 +66,7 @@ at this point in the build directory you have both the shared library of BlackNU
 
 #Cite this work
 
-If you use this software, please consider citing the following work:
+If you use this software, please consider citing the following [work](https://www.sciencedirect.com/science/article/pii/S0010465518303539):
 
 	@article{Giuliani2018,
 	doi = {10.1016/j.cpc.2018.10.005},
