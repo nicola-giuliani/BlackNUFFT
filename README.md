@@ -1,3 +1,10 @@
+
+<p align="center">
+  <a href="http://mathlab.github.io/ITHACA-FV/" target="_blank" >
+    <img alt="BlackNUFFT" src="./docs/logo/logo.png" width="200" />
+  </a>
+</p>
+
 # BlackNUFFT
 
 This repository contains a library for the computation of the Non Uniform Fast Fourier Transform. As reference algorithm we consider the outstanding work by Greengard and Lee which is freely available, under GPL license, here http://www.cims.nyu.edu/cmcl/nufft/nufft.html.
