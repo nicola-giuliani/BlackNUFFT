@@ -1,7 +1,7 @@
 
 <p align="center">
   <a href="http://mathlab.github.io/ITHACA-FV/" target="_blank" >
-    <img alt="BlackNUFFT" src="./docs/logo/logo.png" width="200" />
+    <img alt="BlackNUFFT" src="./docs/logo/logo.png" width="300" />
   </a>
 </p>
 
