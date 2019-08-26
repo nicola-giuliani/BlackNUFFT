@@ -1,6 +1,6 @@
 
 <p align="center">
-  <a href="http://mathlab.github.io/ITHACA-FV/" target="_blank" >
+  <a>
     <img alt="BlackNUFFT" src="./docs/logo/logo.png" width="200" />
   </a>
 </p>
