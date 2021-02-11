@@ -18,6 +18,10 @@
 #include <deal.II/base/types.h>
 #include <deal.II/base/timer.h>
 
+#ifdef NUFFT_WITH_PFFT
+#include <pfft.h>
+#endif
+
 #include <cmath>
 #include <iostream>
 #include <fstream>
@@ -51,7 +55,7 @@ public:
 
   /** Class constructor, we need the input - output grids and the relative vectors. We require
   an MPI communicator to set up the distributed fine grid vector. By default we consider MPI_COMM_WORLD*/
-  void init_nufft(double eps, bool fft_bool, unsigned int tbb_granularity_in=10, std::string gridding_input="FGG", std::string fft_input="FFTW");
+  void init_nufft(double eps, bool fft_bool, unsigned int tbb_granularity_in=10, std::string gridding_input="FGG", std::string fft_input="FFTW", bool output_summary=true);
 
   /** The driver of the function. It calls all the needed function of the private part*/
   void run();
@@ -104,12 +108,19 @@ private:
    the owned fine data array.*/
   void scaling_input_gridding();
 
-  /** This function calls the MPI fft3d using the FFTW package.*/
+  /** This function calls the MPI fft3d using the FFTW or PFFT package.*/
   void compute_fft_3d();
 
+
+#ifdef NUFFT_WITH_PFFT
+  void prepare_pfft_array(pfft_complex *in);
+
+  void retrieve_pfft_result(pfft_complex *out);
+#endif
   /** This function performs a circular shift on the transformed array to obtain an overall shifted FFT.
   It is a local multiplication of -1.*/
-  void shift_data_for_fftw3d();
+  void shift_data_after_fft();
+  void shift_data_before_fft();
 
   /** This functions computes the gridding  from the distributed fine grid array  to
   the output vector. It allows for different gridding choices.*/
@@ -128,8 +139,6 @@ private:
   void prune_before();
 
   void prune_after();
-
-  void shift_data_before_fft();
 
   void compute_stubborn_fft();
 
@@ -169,6 +178,12 @@ private:
 
   types::global_dof_index nf1, nf2, nf3;
 
+  ptrdiff_t input_offset[3], output_offset[3];
+  ptrdiff_t local_i_start_shift[3], local_i_start[3], local_ni[3];
+  ptrdiff_t local_o_start_shift[3], local_o_start[3], local_no[3];
+  ptrdiff_t local_n[3], ni[3], no[3], complete_n[3];
+  std::vector<unsigned int> iblock, oblock;
+
   types::global_dof_index local_nf3, local_nf3_start;
 
   double r2lamb1, r2lamb2, r2lamb3;
@@ -177,11 +192,12 @@ private:
 
   Vector<double> deconv_array_x, deconv_array_y, deconv_array_z;
 
-  IndexSet input_set, output_set, fftw3_set, fftw3_output_set;
+  IndexSet input_set, output_set, fftw3_set, fftw3_output_set, pfft_input_set, pfft_output_set, fft_input_set, fft_output_set;
 
   std::vector<std::vector<IndexSet> > grid_sets;
 
-  parallel::distributed::Vector<double> fine_grid_data;
+  parallel::distributed::Vector<double> fine_grid_data, grid_data_input, grid_data_output;
+  parallel::distributed::Vector<double> *input_grid_helper;
 
   /// Granularity for tbb parallel fors
   unsigned int tbb_granularity;
@@ -200,11 +216,15 @@ private:
   /// Three vectors to store the precomputation of the exponentials.
   Vector<double> xexp, yexp, zexp;
 
-  MPI_Comm mpi_communicator;
+  MPI_Comm mpi_communicator, comm_cart_2d;
+
+  ptrdiff_t alloc_local_pfft;
 
   unsigned int n_mpi_processes, this_mpi_process;
 
   ConditionalOStream pcout;
+
+  bool print_summary;
 
 
 public:
